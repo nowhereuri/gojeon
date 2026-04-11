@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고전 — 동양 고전 검색</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6b4c2a">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+  :root { --bg:#f7f4ef; --surface:#fefcf8; --border:#ddd8ce; --text:#2a2520; --muted:#8c8075; --accent:#6b4c2a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; font-weight:300; min-height:100vh; }
+  .container { max-width:720px; margin:0 auto; padding:3rem 1.5rem; }
+  .title {
+    font-family:'Noto Serif KR',serif; font-size:32px; font-weight:600;
+    color:var(--accent); text-align:center; margin-bottom:0.5rem;
+  }
+  .subtitle { text-align:center; color:var(--muted); font-size:14px; margin-bottom:3rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
+  .card {
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:2rem 1.5rem; text-decoration:none; color:var(--text);
+    transition:all 0.2s; display:block;
+  }
+  .card:hover { border-color:var(--accent); box-shadow:0 4px 20px rgba(107,76,42,0.1); transform:translateY(-2px); }
+  .card-icon { font-size:36px; margin-bottom:1rem; }
+  .card-title { font-family:'Noto Serif KR',serif; font-size:20px; font-weight:600; color:var(--accent); margin-bottom:0.3rem; }
+  .card-sub { font-size:12px; color:var(--muted); margin-bottom:0.8rem; }
+  .card-desc { font-size:13px; color:var(--text); line-height:1.6; }
+  .card-badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:#e8f0e6; color:#4a6741; margin-top:0.8rem; }
+  .card-badge.soon { background:#f0ece6; color:var(--muted); }
+  .footer { text-align:center; margin-top:4rem; font-size:12px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="title">古典</div>
+  <div class="subtitle">동양 고전 검색 · 한자 학습</div>
+
+  <div class="grid">
+    <a class="card" href="chaegundam/">
+      <div class="card-icon">菜</div>
+      <div class="card-title">채근담</div>
+      <div class="card-sub">菜根譚 · 洪自誠</div>
+      <div class="card-desc">처세와 수양의 잠언집. 유교·도교·불교의 지혜를 359구절에 담았다.</div>
+      <span class="card-badge">359구절</span>
+    </a>
+
+    <div class="card" style="opacity:0.5;cursor:default;">
+      <div class="card-icon">論</div>
+      <div class="card-title">논어</div>
+      <div class="card-sub">論語 · 孔子</div>
+      <div class="card-desc">공자와 제자들의 대화. 인(仁)과 예(禮)의 가르침.</div>
+      <span class="card-badge soon">준비 중</span>
+    </div>
+
+    <div class="card" style="opacity:0.5;cursor:default;">
+      <div class="card-icon">孟</div>
+      <div class="card-title">맹자</div>
+      <div class="card-sub">孟子 · 孟軻</div>
+      <div class="card-desc">성선설과 왕도정치. 의로움의 철학.</div>
+      <span class="card-badge soon">준비 중</span>
+    </div>
+
+    <div class="card" style="opacity:0.5;cursor:default;">
+      <div class="card-icon">牧</div>
+      <div class="card-title">목민심서</div>
+      <div class="card-sub">牧民心書 · 丁若鏞</div>
+      <div class="card-desc">다산 정약용의 목민관 지침서.</div>
+      <span class="card-badge soon">준비 중</span>
+    </div>
+
+    <div class="card" style="opacity:0.5;cursor:default;">
+      <div class="card-icon">四</div>
+      <div class="card-title">사자성어</div>
+      <div class="card-sub">四字成語</div>
+      <div class="card-desc">한자 네 글자에 담긴 동양의 지혜와 교훈.</div>
+      <span class="card-badge soon">준비 중</span>
+    </div>
+  </div>
+
+  <div class="footer">고전 古典 · 동양 고전 검색 · 한자 학습</div>
+</div>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

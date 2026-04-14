@@ -194,6 +194,57 @@
     opacity: 0; transition: opacity 0.3s; pointer-events: none;
   }
   .toast.show { opacity: 1; }
+
+  /* ===== 개요 패널 ===== */
+  .overview {
+    max-width: 860px; margin: 1.5rem auto 0; padding: 0 1.5rem;
+  }
+  .overview-toggle {
+    width: 100%; padding: 1.2rem 1.6rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+    font-family: 'Noto Serif KR', serif; font-size: 16px; font-weight: 400;
+    color: var(--accent); transition: all 0.2s;
+  }
+  .overview-toggle:hover { border-color: var(--accent); }
+  .overview-toggle .arrow { font-size: 12px; color: var(--muted); transition: transform 0.3s; }
+  .overview-toggle.open .arrow { transform: rotate(180deg); }
+  .overview-body {
+    max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+    background: var(--surface); border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 6px 6px;
+  }
+  .overview-toggle.open + .overview-body { max-height: 2000px; }
+  .overview-toggle.open { border-radius: 6px 6px 0 0; }
+  .overview-content {
+    padding: 1.6rem;
+    font-size: 14px; line-height: 2; color: var(--text);
+  }
+  .overview-content h3 {
+    font-family: 'Noto Serif KR', serif; font-size: 15px; font-weight: 600;
+    color: var(--accent); margin: 1.5rem 0 0.5rem; padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .overview-content h3:first-child { margin-top: 0; }
+  .overview-content table {
+    width: 100%; border-collapse: collapse; margin: 0.5rem 0;
+    font-size: 13px;
+  }
+  .overview-content th {
+    text-align: left; padding: 6px 10px; background: var(--bg);
+    border: 1px solid var(--border); font-weight: 500; color: var(--accent);
+    white-space: nowrap;
+  }
+  .overview-content td {
+    padding: 6px 10px; border: 1px solid var(--border);
+  }
+  .overview-content ul { padding-left: 1.2rem; margin: 0.3rem 0; }
+  .overview-content li { margin-bottom: 0.3rem; }
+  .overview-content .keyword {
+    display: inline-block; font-family: 'Noto Serif KR', serif;
+    font-size: 13px; padding: 2px 8px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 4px; margin: 2px;
+  }
 </style>
 </head>
 <body>
@@ -211,6 +262,61 @@
     <div class="stats" id="stats">전체 <span>32</span>분</div>
   </div>
 </header>
+
+<div class="overview">
+  <button class="overview-toggle" onclick="this.classList.toggle('open')">
+    금강경 개요 · 金剛般若波羅蜜經
+    <span class="arrow">▼</span>
+  </button>
+  <div class="overview-body">
+    <div class="overview-content">
+      <h3>개요</h3>
+      <table>
+        <tr><th>정식 명칭</th><td>금강반야바라밀경 (金剛般若波羅蜜經)</td></tr>
+        <tr><th>뜻</th><td>금강(다이아몬드)처럼 단단한 지혜(반야)로 피안(바라밀)에 이르는 경전</td></tr>
+        <tr><th>원어</th><td>Vajracchedikā Prajñāpāramitā Sūtra (산스크리트어)</td></tr>
+        <tr><th>한역</th><td>구마라집(鳩摩羅什, 344~413)이 402년에 번역한 판본이 가장 널리 읽힘</td></tr>
+        <tr><th>분량</th><td>32분(장), 약 5,000자</td></tr>
+      </table>
+
+      <h3>핵심 사상</h3>
+      <ul>
+        <li><strong>공(空)</strong> — 모든 것에는 고정된 실체가 없다</li>
+        <li><strong>무상(無相)</strong> — 형상에 집착하지 말라. <span class="keyword">凡所有相 皆是虛妄</span> 무릇 형상이 있는 것은 모두 허망하다</li>
+        <li><strong>무주(無住)</strong> — 어디에도 머물지 않는 마음. <span class="keyword">應無所住而生其心</span> 마땅히 머무는 바 없이 마음을 내라</li>
+        <li><strong>비유</strong> — <span class="keyword">如夢幻泡影 如露亦如電</span> 꿈, 환상, 물거품, 그림자, 이슬, 번개와 같다</li>
+      </ul>
+
+      <h3>구조</h3>
+      <table>
+        <tr><th>제1~5분</th><td>도입 — 수보리가 부처에게 질문</td></tr>
+        <tr><th>제6~16분</th><td>전반부 — 공의 지혜, 집착 없는 보시</td></tr>
+        <tr><th>제17~32분</th><td>후반부 — 같은 질문 반복, 더 깊은 차원의 답변</td></tr>
+      </table>
+
+      <h3>등장인물</h3>
+      <table>
+        <tr><th>부처</th><td>佛 · 世尊 · 如來 — 석가모니, 설법하는 주체</td></tr>
+        <tr><th>수보리</th><td>須菩提 — 부처의 제자, 질문자. 해공제일(解空第一), 공을 가장 잘 이해한 제자</td></tr>
+      </table>
+
+      <h3>자주 나오는 핵심 표현</h3>
+      <table>
+        <tr><th>阿耨多羅三藐三菩提</th><td>최상의 깨달음 (아뇩다라삼먁삼보리)</td></tr>
+        <tr><th>般若波羅蜜</th><td>지혜의 완성 (반야바라밀)</td></tr>
+        <tr><th>即非~是名~</th><td>"~이 곧 ~이 아니니, 이를 ~이라 이름한다" — 금강경의 대표적 논법</td></tr>
+        <tr><th>四句偈</th><td>네 구절의 게송. 경전의 핵심을 함축</td></tr>
+      </table>
+
+      <h3>번역 작업 참고사항</h3>
+      <ul>
+        <li><strong>음역어</strong>가 많음 — 아뇩다라삼먁삼보리, 수보리, 수다원, 사다함, 아나함, 아라한 등은 번역하지 않고 음을 그대로 씀</li>
+        <li><strong>반복 구조</strong> — "A를 A가 아니라 하니, 이를 A라 이름한다" 패턴이 경전 전체에 반복됨</li>
+        <li>같은 한자가 문맥에 따라 다른 뜻으로 쓰일 수 있음 (예: 說 — 설법하다/기뻐하다)</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
 <main id="results"></main>
 

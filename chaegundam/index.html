@@ -306,11 +306,26 @@ function openModal(id){
     }).join('');
   }
 
+  // 자주 쓰이는 허사·기능어 기본 사전
+  const BASE_DICT = {
+    '一':{mean:'한',read:'일'},'不':{mean:'아닐',read:'불'},'中':{mean:'가운데',read:'중'},
+    '之':{mean:'갈',read:'지'},'乎':{mean:'어조사',read:'호'},'也':{mean:'어조사',read:'야'},
+    '了':{mean:'마칠',read:'료'},'事':{mean:'일',read:'사'},'于':{mean:'어조사',read:'우'},
+    '人':{mean:'사람',read:'인'},'以':{mean:'써',read:'이'},'何':{mean:'어찌',read:'하'},
+    '便':{mean:'편할',read:'편'},'個':{mean:'낱',read:'개'},'其':{mean:'그',read:'기'},
+    '在':{mean:'있을',read:'재'},'外':{mean:'바깥',read:'외'},'得':{mean:'얻을',read:'득'},
+    '心':{mean:'마음',read:'심'},'於':{mean:'어조사',read:'어'},'是':{mean:'이',read:'시'},
+    '有':{mean:'있을',read:'유'},'段':{mean:'구분',read:'단'},'游':{mean:'놀',read:'유'},
+    '無':{mean:'없을',read:'무'},'爲':{mean:'할',read:'위'},'的':{mean:'과녁',read:'적'},
+    '矣':{mean:'어조사',read:'의'},'者':{mean:'놈',read:'자'},'而':{mean:'말이을',read:'이'},
+    '自':{mean:'스스로',read:'자'},'處':{mean:'곳',read:'처'},'裁':{mean:'마를',read:'재'}
+  };
+
   // anno에서 사전을 만들고, 원문 text를 그대로 따라가며 카드 생성
   function annoToCards(anno, text){
     if(!anno || !text) return '';
-    // anno에서 한자→{뜻,음} 사전 구축
-    const dict = {};
+    // anno에서 한자→{뜻,음} 사전 구축 (기본 사전 위에 덮어쓰기)
+    const dict = Object.assign({}, BASE_DICT);
     const re = /(\S)\(([^)]+)\)/g;
     let m;
     while((m=re.exec(anno))!==null){

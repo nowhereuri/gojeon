@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>장자 — 莊子</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #f4f1ec;
+    --surface: #fdfbf7;
+    --border: #ddd8ce;
+    --text: #2a2520;
+    --muted: #8c8075;
+    --accent: #4a6741;
+    --accent2: #6b8f61;
+    --highlight: #e6ede4;
+    --sidebar-w: 220px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* ===== 헤더 ===== */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1.4rem 1.5rem 1.2rem;
+    position: sticky; top: 0; z-index: 200;
+  }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+  }
+  .logo-wrap { flex-shrink: 0; }
+  .logo {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 20px; font-weight: 600;
+    color: var(--accent); letter-spacing: 2px;
+  }
+  .logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+  .home-link {
+    font-size: 11px; color: var(--muted); text-decoration: none;
+    border: 1px solid var(--border); padding: 3px 10px; border-radius: 20px;
+    transition: all 0.2s;
+  }
+  .home-link:hover { color: var(--accent); border-color: var(--accent); }
+
+  .search-area { flex: 1; min-width: 180px; }
+  .search-input {
+    width: 100%; padding: 9px 16px;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg); font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px; color: var(--text); outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+  /* ===== 모바일 편 선택 드롭다운 ===== */
+  .chapter-select-wrap {
+    display: none;
+    padding: 0.8rem 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .chapter-select {
+    width: 100%; padding: 8px 12px;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg); font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px; color: var(--text); outline: none;
+  }
+
+  /* ===== 본문 레이아웃 ===== */
+  .layout {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; gap: 0; min-height: calc(100vh - 80px);
+  }
+
+  /* ===== 사이드바 ===== */
+  aside {
+    width: var(--sidebar-w); flex-shrink: 0;
+    padding: 1.5rem 0;
+    border-right: 1px solid var(--border);
+    position: sticky; top: 80px;
+    height: calc(100vh - 80px); overflow-y: auto;
+  }
+  .sidebar-section { margin-bottom: 0.5rem; }
+  .sidebar-type {
+    font-size: 10px; color: var(--muted); letter-spacing: 2px;
+    padding: 0.4rem 1.2rem; font-weight: 500;
+    text-transform: uppercase;
+  }
+  .sidebar-item {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 0.55rem 1.2rem; cursor: pointer;
+    transition: background 0.15s; border-left: 3px solid transparent;
+    font-size: 13px; color: var(--text);
+  }
+  .sidebar-item:hover { background: var(--highlight); }
+  .sidebar-item.active {
+    background: var(--highlight);
+    border-left-color: var(--accent);
+    color: var(--accent); font-weight: 500;
+  }
+  .sidebar-item .si-hanja {
+    font-family: 'Noto Serif KR', serif; font-size: 13px; flex-shrink: 0;
+  }
+  .sidebar-item .si-ko { font-size: 12px; color: var(--muted); }
+  .sidebar-item.active .si-ko { color: var(--accent2); }
+  .sidebar-item .si-count {
+    margin-left: auto; font-size: 10px; color: var(--border);
+  }
+  .sidebar-item.soon { opacity: 0.4; cursor: default; }
+
+  /* ===== 메인 콘텐츠 ===== */
+  main {
+    flex: 1; padding: 2rem 2rem 4rem;
+    min-width: 0;
+  }
+
+  /* 검색 결과 모드 */
+  .search-mode .chapter-view { display: none; }
+  .search-mode .search-results { display: block; }
+  .search-results { display: none; }
+
+  /* 편 헤더 */
+  .chapter-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .ch-type { font-size: 11px; color: var(--muted); letter-spacing: 2px; margin-bottom: 0.5rem; }
+  .ch-title {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 0.8rem;
+  }
+  .ch-hanja {
+    font-family: 'Noto Serif KR', serif; font-size: 28px;
+    font-weight: 600; color: var(--accent);
+  }
+  .ch-ko { font-size: 18px; color: var(--text); }
+  .ch-meaning { font-size: 13px; color: var(--muted); margin-bottom: 1rem; }
+  .ch-intro {
+    font-size: 14px; line-height: 1.9; color: var(--text);
+    background: var(--highlight); padding: 1.2rem 1.4rem;
+    border-radius: 6px; border-left: 3px solid var(--accent);
+  }
+
+  /* 이야기 카드 */
+  .story-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; margin-bottom: 12px; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .story-card:hover { border-color: var(--accent2); }
+
+  .story-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 1.1rem 1.4rem; cursor: pointer;
+  }
+  .story-num {
+    font-size: 11px; color: var(--muted);
+    font-family: 'Noto Serif KR', serif; flex-shrink: 0;
+  }
+  .story-hanja {
+    font-family: 'Noto Serif KR', serif; font-size: 14px;
+    color: var(--accent); flex-shrink: 0;
+  }
+  .story-title { font-size: 14px; color: var(--text); }
+  .story-arrow {
+    margin-left: auto; color: var(--muted); font-size: 12px;
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .story-card.open .story-arrow { transform: rotate(180deg); }
+
+  .story-body {
+    display: none; border-top: 1px solid var(--border);
+    padding: 1.4rem 1.6rem;
+  }
+  .story-card.open .story-body { display: block; }
+
+  .section-label {
+    font-size: 10px; color: var(--muted); letter-spacing: 2px;
+    font-weight: 500; text-transform: uppercase; margin-bottom: 0.7rem;
+  }
+  .text-original {
+    font-family: 'Noto Serif KR', serif; font-size: 16px;
+    line-height: 2; color: var(--text); font-weight: 400;
+    margin-bottom: 1.6rem; white-space: pre-line;
+  }
+  .text-literal {
+    font-size: 14px; line-height: 1.9; color: var(--text);
+    margin-bottom: 1.6rem; white-space: pre-line;
+  }
+  .text-meaning {
+    font-size: 14px; line-height: 1.9; color: var(--text);
+    white-space: pre-line;
+  }
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 1.4rem 0; }
+
+  /* 준비 중 */
+  .coming-soon {
+    text-align: center; padding: 5rem 2rem;
+    color: var(--muted); font-size: 14px;
+  }
+  .coming-soon .cs-hanja {
+    font-family: 'Noto Serif KR', serif; font-size: 40px;
+    color: var(--border); display: block; margin-bottom: 1rem;
+  }
+
+  /* 검색 결과 */
+  .result-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 1.2rem 1.4rem; margin-bottom: 10px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .result-card:hover { border-color: var(--accent); }
+  .result-meta { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .result-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .result-excerpt { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  mark { background: #d4edcf; color: inherit; border-radius: 2px; padding: 0 1px; }
+
+  .no-results { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
+
+  /* 반응형 */
+  @media (max-width: 700px) {
+    aside { display: none; }
+    .chapter-select-wrap { display: block; }
+    main { padding: 1.2rem 1rem 3rem; }
+    .ch-hanja { font-size: 22px; }
+    .layout { min-height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-wrap">
+      <div class="logo">莊子</div>
+      <div class="logo-sub">장자 전문 검색 · 내편·외편</div>
+    </div>
+    <div class="search-area">
+      <input class="search-input" id="searchInput" type="text" placeholder="원문, 이야기 제목 검색…" autocomplete="off">
+      <div class="search-hint" id="searchHint"></div>
+    </div>
+    <a class="home-link" href="../">← 고전 목록</a>
+  </div>
+</header>
+
+<div class="chapter-select-wrap">
+  <select class="chapter-select" id="chapterSelect" onchange="selectChapterById(this.value)">
+  </select>
+</div>
+
+<div class="layout">
+  <aside id="sidebar"></aside>
+  <main id="main">
+    <div class="chapter-view" id="chapterView"></div>
+    <div class="search-results" id="searchResults"></div>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script>
+// ===== 데이터 준비 =====
+// 준비 중인 편 목록 (data.js에 없는 편)
+const COMING_SOON = [
+  { id:"inner-2", type:"내편", number:2, hanja:"齊物論", ko:"제물론", meaning:"사물의 평등함" },
+  { id:"inner-3", type:"내편", number:3, hanja:"養生主", ko:"양생주", meaning:"삶을 기르는 근본" },
+  { id:"inner-4", type:"내편", number:4, hanja:"人間世", ko:"인간세", meaning:"인간 세상을 사는 법" },
+  { id:"inner-5", type:"내편", number:5, hanja:"德充符", ko:"덕충부", meaning:"덕이 넘치는 표시" },
+  { id:"inner-6", type:"내편", number:6, hanja:"大宗師", ko:"대종사", meaning:"위대한 스승" },
+  { id:"inner-7", type:"내편", number:7, hanja:"應帝王", ko:"응제왕", meaning:"제왕의 도리" },
+  { id:"outer-8", type:"외편", number:8, hanja:"駢拇", ko:"변무", meaning:"" },
+  { id:"outer-9", type:"외편", number:9, hanja:"馬蹄", ko:"마제", meaning:"" },
+  { id:"outer-10", type:"외편", number:10, hanja:"胠篋", ko:"거협", meaning:"" },
+  { id:"outer-11", type:"외편", number:11, hanja:"在宥", ko:"재유", meaning:"" },
+  { id:"outer-12", type:"외편", number:12, hanja:"天地", ko:"천지", meaning:"" },
+  { id:"outer-13", type:"외편", number:13, hanja:"天道", ko:"천도", meaning:"" },
+  { id:"outer-14", type:"외편", number:14, hanja:"天運", ko:"천운", meaning:"" },
+  { id:"outer-15", type:"외편", number:15, hanja:"刻意", ko:"각의", meaning:"" },
+  { id:"outer-16", type:"외편", number:16, hanja:"繕性", ko:"선성", meaning:"" },
+  { id:"outer-17", type:"외편", number:17, hanja:"秋水", ko:"추수", meaning:"" },
+  { id:"outer-18", type:"외편", number:18, hanja:"至樂", ko:"지락", meaning:"" },
+  { id:"outer-19", type:"외편", number:19, hanja:"達生", ko:"달생", meaning:"" },
+  { id:"outer-20", type:"외편", number:20, hanja:"山木", ko:"산목", meaning:"" },
+  { id:"outer-21", type:"외편", number:21, hanja:"田子方", ko:"전자방", meaning:"" },
+  { id:"outer-22", type:"외편", number:22, hanja:"知北遊", ko:"지북유", meaning:"" },
+];
+
+// 전체 목록: JANGJA(data.js) + 준비 중
+function getAllChapters() {
+  const ready = JANGJA.map(c => c.id);
+  const cs = COMING_SOON.filter(c => !ready.includes(c.id));
+  return [...JANGJA, ...cs].sort((a, b) => {
+    const typeOrder = { "내편": 0, "외편": 1 };
+    if (typeOrder[a.type] !== typeOrder[b.type]) return typeOrder[a.type] - typeOrder[b.type];
+    return a.number - b.number;
+  });
+}
+
+let currentChapterId = null;
+
+// ===== 사이드바 렌더 =====
+function renderSidebar() {
+  const all = getAllChapters();
+  const sidebar = document.getElementById('sidebar');
+  const select = document.getElementById('chapterSelect');
+  let html = '';
+  let selectHtml = '';
+  let prevType = '';
+
+  all.forEach(ch => {
+    if (ch.type !== prevType) {
+      html += `<div class="sidebar-type">${ch.type}</div>`;
+      prevType = ch.type;
+    }
+    const isReady = !!ch.stories;
+    const activeClass = ch.id === currentChapterId ? ' active' : '';
+    const soonClass = !isReady ? ' soon' : '';
+    const onclick = isReady ? `onclick="selectChapterById('${ch.id}')"` : '';
+    html += `<div class="sidebar-item${activeClass}${soonClass}" ${onclick}>
+      <span class="si-hanja">${ch.hanja}</span>
+      <span class="si-ko">${ch.ko}</span>
+      ${isReady ? `<span class="si-count">${ch.stories.length}</span>` : ''}
+    </div>`;
+    selectHtml += `<option value="${ch.id}" ${!isReady ? 'disabled' : ''}>${ch.type} ${ch.number}. ${ch.hanja} ${ch.ko}${!isReady ? ' (준비 중)' : ''}</option>`;
+  });
+
+  sidebar.innerHTML = html;
+  select.innerHTML = selectHtml;
+  if (currentChapterId) select.value = currentChapterId;
+}
+
+// ===== 편 선택 =====
+function selectChapterById(id) {
+  const all = getAllChapters();
+  const ch = all.find(c => c.id === id);
+  if (!ch) return;
+  currentChapterId = id;
+
+  // 검색 초기화
+  document.getElementById('searchInput').value = '';
+  document.getElementById('main').classList.remove('search-mode');
+  document.getElementById('searchHint').textContent = '';
+
+  renderSidebar();
+  renderChapter(ch);
+}
+
+// ===== 편 렌더 =====
+function renderChapter(ch) {
+  const view = document.getElementById('chapterView');
+
+  if (!ch.stories) {
+    view.innerHTML = `
+      <div class="chapter-header">
+        <div class="ch-type">${ch.type} ${ch.number}편</div>
+        <div class="ch-title">
+          <span class="ch-hanja">${ch.hanja}</span>
+          <span class="ch-ko">${ch.ko}</span>
+        </div>
+        ${ch.meaning ? `<div class="ch-meaning">${ch.meaning}</div>` : ''}
+      </div>
+      <div class="coming-soon">
+        <span class="cs-hanja">${ch.hanja}</span>
+        준비 중입니다
+      </div>`;
+    return;
+  }
+
+  let storiesHtml = '';
+  ch.stories.forEach((s, i) => {
+    storiesHtml += `
+      <div class="story-card" id="${s.id}">
+        <div class="story-head" onclick="toggleStory('${s.id}')">
+          <span class="story-num">${i + 1}</span>
+          <span class="story-hanja">${s.hanja}</span>
+          <span class="story-title">${s.title}</span>
+          <span class="story-arrow">▼</span>
+        </div>
+        <div class="story-body">
+          <div class="section-label">원문</div>
+          <div class="text-original">${esc(s.text)}</div>
+          <hr class="section-divider">
+          <div class="section-label">직역</div>
+          <div class="text-literal">${esc(s.literal)}</div>
+          <hr class="section-divider">
+          <div class="section-label">해석</div>
+          <div class="text-meaning">${esc(s.meaning)}</div>
+        </div>
+      </div>`;
+  });
+
+  view.innerHTML = `
+    <div class="chapter-header">
+      <div class="ch-type">${ch.type} ${ch.number}편</div>
+      <div class="ch-title">
+        <span class="ch-hanja">${ch.hanja}</span>
+        <span class="ch-ko">${ch.ko}</span>
+      </div>
+      ${ch.meaning ? `<div class="ch-meaning">${ch.meaning}</div>` : ''}
+      ${ch.intro ? `<div class="ch-intro">${esc(ch.intro)}</div>` : ''}
+    </div>
+    ${storiesHtml}`;
+}
+
+function toggleStory(id) {
+  const card = document.getElementById(id);
+  if (card) card.classList.toggle('open');
+}
+
+function esc(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ===== 검색 =====
+function buildSearchIndex() {
+  const idx = [];
+  JANGJA.forEach(ch => {
+    ch.stories.forEach(s => {
+      idx.push({
+        chapterId: ch.id,
+        chapterLabel: `${ch.type} ${ch.number}. ${ch.hanja} ${ch.ko}`,
+        storyId: s.id,
+        title: s.title,
+        hanja: s.hanja,
+        text: s.text,
+        literal: s.literal,
+        meaning: s.meaning,
+        full: [s.title, s.hanja, s.text, s.literal, s.meaning].join(' ')
+      });
+    });
+  });
+  return idx;
+}
+
+let searchIndex = null;
+
+function highlight(str, q) {
+  if (!q) return esc(str);
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return esc(str).replace(new RegExp(escaped, 'gi'), m => `<mark>${m}</mark>`);
+}
+
+function doSearch(q) {
+  if (!searchIndex) searchIndex = buildSearchIndex();
+  const main = document.getElementById('main');
+  const hint = document.getElementById('searchHint');
+  const results = document.getElementById('searchResults');
+
+  if (!q.trim()) {
+    main.classList.remove('search-mode');
+    hint.textContent = '';
+    return;
+  }
+
+  main.classList.add('search-mode');
+  const matched = searchIndex.filter(s => s.full.includes(q));
+  hint.textContent = `"${q}" — ${matched.length}건`;
+
+  if (matched.length === 0) {
+    results.innerHTML = `<div class="no-results">검색 결과가 없습니다.</div>`;
+    return;
+  }
+
+  results.innerHTML = matched.map(s => {
+    const excerpt = getExcerpt(s.full, q, 80);
+    return `<div class="result-card" onclick="openStory('${s.chapterId}','${s.storyId}')">
+      <div class="result-meta">${s.chapterLabel}</div>
+      <div class="result-title">${highlight(s.hanja, q)} ${highlight(s.title, q)}</div>
+      <div class="result-excerpt">${highlight(excerpt, q)}</div>
+    </div>`;
+  }).join('');
+}
+
+function getExcerpt(text, q, len) {
+  const idx = text.indexOf(q);
+  if (idx < 0) return text.slice(0, len) + '…';
+  const start = Math.max(0, idx - 20);
+  const end = Math.min(text.length, idx + len);
+  return (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
+}
+
+function openStory(chapterId, storyId) {
+  selectChapterById(chapterId);
+  setTimeout(() => {
+    const el = document.getElementById(storyId);
+    if (el) {
+      el.classList.add('open');
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 100);
+}
+
+// ===== 초기화 =====
+document.getElementById('searchInput').addEventListener('input', e => doSearch(e.target.value));
+
+renderSidebar();
+
+// 첫 번째 준비된 편 자동 선택
+const first = getAllChapters().find(c => c.stories);
+if (first) selectChapterById(first.id);
+</script>
+</body>
+</html>

@@ -193,9 +193,44 @@
   }
   .text-original {
     font-family: 'Noto Serif KR', serif; font-size: 16px;
-    line-height: 2; color: var(--text); font-weight: 400;
+    line-height: 2.8; color: var(--text); font-weight: 400;
     margin-bottom: 1.6rem; white-space: pre-line;
+    cursor: pointer;
   }
+  .text-original:hover { background: #f0f5ef; border-radius: 4px; }
+  .text-original ruby { font-size: 16px; ruby-position: under; }
+  .text-original ruby rt { font-size: 10px; color: var(--accent); ruby-align: center; }
+
+  /* 토스트 */
+  .hanja-toast {
+    display: none; position: fixed; bottom: 2rem; left: 50%;
+    transform: translateX(-50%);
+    background: #2a2520; color: #fdfbf7;
+    border-radius: 10px; padding: 1.2rem 1.4rem;
+    max-width: 680px; width: calc(100% - 2rem);
+    z-index: 500; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    max-height: 50vh; overflow-y: auto;
+  }
+  .hanja-toast.show { display: block; }
+  .toast-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 0.8rem; font-size: 11px; color: #8c8075; letter-spacing: 1px;
+  }
+  .toast-close {
+    background: none; border: none; color: #8c8075;
+    font-size: 18px; cursor: pointer; line-height: 1;
+  }
+  .toast-grid {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .toast-item {
+    background: #3a3530; border-radius: 6px;
+    padding: 4px 10px; text-align: center;
+    min-width: 52px;
+  }
+  .toast-char { font-family: 'Noto Serif KR', serif; font-size: 16px; display: block; }
+  .toast-read { font-size: 10px; color: var(--accent2); display: block; }
+  .toast-mean { font-size: 10px; color: #8c8075; display: block; }
   .text-literal {
     font-size: 14px; line-height: 1.9; color: var(--text);
     margin-bottom: 1.6rem; white-space: pre-line;
@@ -261,6 +296,14 @@
   </select>
 </div>
 
+<div class="hanja-toast" id="hanjaToast">
+  <div class="toast-header">
+    <span>한자 풀이</span>
+    <button class="toast-close" onclick="closeToast()">×</button>
+  </div>
+  <div class="toast-grid" id="toastGrid"></div>
+</div>
+
 <div class="layout">
   <aside id="sidebar"></aside>
   <main id="main">
@@ -271,6 +314,88 @@
 
 <script src="data.js"></script>
 <script>
+// ===== 한자 사전 =====
+const HANJA_DICT = {
+  '北':'북','冥':'명','有':'유','魚':'어','其':'기','名':'명','為':'위','鯤':'곤',
+  '大':'대','不':'불','知':'지','幾':'기','千':'천','里':'리','也':'야','化':'화',
+  '而':'이','鳥':'조','鵬':'붕','背':'배','怒':'노','飛':'비','翼':'익','若':'약',
+  '垂':'수','天':'천','雲':'운','是':'시','海':'해','運':'운','則':'칙','將':'장',
+  '徙':'사','於':'어','南':'남','者':'자','池':'지','齊':'제','諧':'해','志':'지',
+  '怪':'괴','言':'언','曰':'왈','之':'지','水':'수','擊':'격','三':'삼','摶':'단',
+  '扶':'부','搖':'요','上':'상','九':'구','萬':'만','去':'거','以':'이','六':'육',
+  '月':'월','息':'식','野':'야','馬':'마','塵':'진','埃':'애','生':'생','物':'물',
+  '相':'상','吹':'취','蒼':'창','正':'정','色':'색','邪':'사','遠':'원','無':'무',
+  '所':'소','至':'지','極':'극','視':'시','下':'하','亦':'역','如':'여','此':'차',
+  '矣':'의','蜩':'조','與':'여','學':'학','鳩':'구','笑':'소','決':'결','起':'기',
+  '搶':'창','榆':'유','枋':'방','止':'지','時':'시','地':'지','奚':'해','二':'이',
+  '蟲':'충','又':'우','何':'하','適':'적','莽':'망','餐':'찬','反':'반','腹':'복',
+  '猶':'유','果':'과','百':'백','宿':'숙','舂':'용','糧':'량','聚':'취','小':'소',
+  '及':'급','年':'년','朝':'조','菌':'균','晦':'회','朔':'삭','蟪':'혜','蛄':'고',
+  '春':'춘','秋':'추','故':'고','夫':'부','效':'효','一':'일','官':'관','行':'행',
+  '比':'비','鄉':'향','德':'덕','合':'합','君':'군','徵':'징','國':'국','自':'자',
+  '宋':'송','榮':'영','子':'자','然':'연','舉':'거','世':'세','譽':'예','加':'가',
+  '勸':'권','非':'비','沮':'저','定':'정','乎':'호','內':'내','外':'외','分':'분',
+  '辯':'변','辱':'욕','境':'경','斯':'사','已':'이','彼':'피','未':'미','數':'수',
+  '雖':'수','樹':'수','列':'열','御':'어','風':'풍','泠':'령','善':'선','旬':'순',
+  '五':'오','日':'일','後':'후','致':'치','福':'복','免':'면','待':'대','乘':'승',
+  '地':'지','氣':'기','窮':'궁','且':'차','惡':'악','曰':'왈','人':'인','己':'기',
+  '神':'신','功':'공','聖':'성','惠':'혜','謂':'위','吾':'오','樗':'저','本':'본',
+  '擁':'옹','腫':'종','中':'중','繩':'승','墨':'묵','枝':'지','卷':'권','曲':'곡',
+  '規':'규','矩':'구','立':'립','塗':'도','匠':'장','顧':'고','今':'금','言':'언',
+  '衆':'중','莫':'막','獨':'독','見':'견','狸':'리','狌':'성','卑':'비','身':'신',
+  '伏':'복','候':'후','敖':'오','東':'동','西':'서','跳':'도','梁':'량','辟':'벽',
+  '高':'고','機':'기','死':'사','罔':'망','罟':'고','斄':'리','牛':'우','執':'집',
+  '鼠':'서','患':'환','有':'유','廣':'광','漠':'막','側':'측','逍':'소','遙':'요',
+  '寢':'침','臥':'와','夭':'요','斤':'근','斧':'부','害':'해','安':'안','困':'곤',
+  '苦':'고','在':'재','宥':'유','天':'천','道':'도','帝':'제','王':'왕','人':'인',
+  '間':'간','世':'세','養':'양','主':'주','充':'충','符':'부','宗':'종','師':'사',
+  '應':'응','物':'물','論':'론','駢':'변','拇':'무','馬':'마','蹄':'제','胠':'거',
+  '篋':'협','秋':'추','樂':'락','達':'달','山':'산','木':'목','田':'전','方':'방',
+  '北':'북','遊':'유','逍':'소','遙':'요','遊':'유','齊':'제','物':'물','論':'론',
+  '莊':'장','周':'주','惠':'혜','施':'시','列':'열','禦':'어','寇':'구','盜':'도',
+  '心':'심','齋':'재','坐':'좌','忘':'망','真':'진','知':'지','得':'득','道':'도',
+};
+
+function isCJK(ch) {
+  const c = ch.codePointAt(0);
+  return (c >= 0x4E00 && c <= 0x9FFF) || (c >= 0x3400 && c <= 0x4DBF);
+}
+
+function rubyText(text) {
+  return text.split('\n').map(line => {
+    let out = '';
+    for (const ch of line) {
+      if (isCJK(ch) && HANJA_DICT[ch]) {
+        out += `<ruby>${ch}<rt>${HANJA_DICT[ch]}</rt></ruby>`;
+      } else {
+        out += ch.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+    }
+    return `<span style="display:block">${out}</span>`;
+  }).join('');
+}
+
+function showToast(text) {
+  const seen = new Set();
+  const items = [];
+  for (const ch of text) {
+    if (isCJK(ch) && !seen.has(ch)) {
+      seen.add(ch);
+      const read = HANJA_DICT[ch] || '?';
+      items.push(`<div class="toast-item">
+        <span class="toast-char">${ch}</span>
+        <span class="toast-read">${read}</span>
+      </div>`);
+    }
+  }
+  document.getElementById('toastGrid').innerHTML = items.join('');
+  document.getElementById('hanjaToast').classList.add('show');
+}
+
+function closeToast() {
+  document.getElementById('hanjaToast').classList.remove('show');
+}
+
 // ===== 데이터 준비 =====
 // 준비 중인 편 목록 (data.js에 없는 편)
 const COMING_SOON = [
@@ -389,8 +514,8 @@ function renderChapter(ch) {
           <span class="story-arrow">▼</span>
         </div>
         <div class="story-body">
-          <div class="section-label">원문</div>
-          <div class="text-original">${esc(s.text)}</div>
+          <div class="section-label">원문 <span style="font-size:9px;color:var(--muted);font-weight:300;letter-spacing:0">· 클릭하면 한자 풀이</span></div>
+          <div class="text-original" onclick="showToast(${JSON.stringify(s.text)})">${rubyText(s.text)}</div>
           <hr class="section-divider">
           <div class="section-label">직역</div>
           <div class="text-literal">${esc(s.literal)}</div>

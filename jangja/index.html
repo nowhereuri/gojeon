@@ -375,7 +375,13 @@ function rubyText(text) {
   }).join('');
 }
 
-function showToast(text) {
+function showToast(storyId) {
+  let text = '';
+  for (const ch of JANGJA) {
+    const s = ch.stories.find(s => s.id === storyId);
+    if (s) { text = s.text; break; }
+  }
+  if (!text) return;
   const seen = new Set();
   const items = [];
   for (const ch of text) {
@@ -515,7 +521,7 @@ function renderChapter(ch) {
         </div>
         <div class="story-body">
           <div class="section-label">원문 <span style="font-size:9px;color:var(--muted);font-weight:300;letter-spacing:0">· 클릭하면 한자 풀이</span></div>
-          <div class="text-original" onclick="showToast(${JSON.stringify(s.text)})">${rubyText(s.text)}</div>
+          <div class="text-original" onclick="showToast('${s.id}')">${rubyText(s.text)}</div>
           <hr class="section-divider">
           <div class="section-label">직역</div>
           <div class="text-literal">${esc(s.literal)}</div>

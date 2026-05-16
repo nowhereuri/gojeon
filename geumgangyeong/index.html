@@ -38,6 +38,9 @@
   }
 
   .header-inner { max-width: 860px; margin: 0 auto; }
+  .logo-row { display: flex; align-items: center; justify-content: space-between; }
+  .home-link { font-size:11px; color:var(--muted); text-decoration:none; border:1px solid var(--border); padding:3px 10px; border-radius:20px; transition: all 0.2s; }
+  .home-link:hover { color:var(--accent); border-color:var(--accent); }
 
   .logo {
     font-family: 'Noto Serif KR', serif;
@@ -251,9 +254,11 @@
 
 <header>
   <div class="header-inner">
-    <div class="logo">金剛經</div>
+    <div class="logo-row">
+      <div class="logo">金剛經</div>
+      <a href="../" class="home-link">← 고전 목록</a>
+    </div>
     <div class="logo-sub">금강반야바라밀경 전문 검색 · 鳩摩羅什 漢譯</div>
-    <a href="../" style="font-size:11px;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:3px 10px;border-radius:20px;margin-top:4px;display:inline-block;">← 고전 목록</a>
     <div class="search-wrap">
       <input class="search-input" id="searchInput" type="text" placeholder="한자, 분 제목, 직역, 해석으로 검색..." autofocus>
       <button class="filter-btn active" data-filter="all">전체</button>

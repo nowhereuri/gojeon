@@ -201,36 +201,40 @@
   .text-original ruby { font-size: 16px; ruby-position: under; }
   .text-original ruby rt { font-size: 10px; color: var(--accent); ruby-align: center; }
 
-  /* 토스트 */
-  .hanja-toast {
-    display: none; position: fixed; bottom: 2rem; left: 50%;
-    transform: translateX(-50%);
-    background: #2a2520; color: #fdfbf7;
-    border-radius: 10px; padding: 1.2rem 1.4rem;
-    max-width: 680px; width: calc(100% - 2rem);
-    z-index: 500; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    max-height: 50vh; overflow-y: auto;
+  /* 한자 풀이 모달 */
+  .hanja-overlay {
+    display: none; position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.4); z-index: 300;
+    justify-content: center; align-items: flex-start;
+    overflow-y: auto; padding: 2rem 1rem;
   }
-  .hanja-toast.show { display: block; }
-  .toast-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 0.8rem; font-size: 11px; color: #8c8075; letter-spacing: 1px;
+  .hanja-overlay.open { display: flex; }
+  .hanja-modal {
+    background: var(--surface); border-radius: 10px;
+    max-width: 720px; width: 100%; padding: 2rem;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    position: relative;
   }
-  .toast-close {
-    background: none; border: none; color: #8c8075;
-    font-size: 18px; cursor: pointer; line-height: 1;
+  .hanja-modal-title {
+    font-size: 11px; color: var(--muted); letter-spacing: 2px;
+    font-weight: 500; margin-bottom: 1.2rem;
   }
-  .toast-grid {
-    display: flex; flex-wrap: wrap; gap: 6px;
+  .hanja-modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: none; border: none; font-size: 22px;
+    color: var(--muted); cursor: pointer;
   }
-  .toast-item {
-    background: #3a3530; border-radius: 6px;
-    padding: 4px 10px; text-align: center;
-    min-width: 52px;
+  .anno-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .anno-card {
+    display: flex; flex-direction: column; align-items: center;
+    min-width: 52px; padding: 6px 8px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
   }
-  .toast-char { font-family: 'Noto Serif KR', serif; font-size: 16px; display: block; }
-  .toast-read { font-size: 10px; color: var(--accent2); display: block; }
-  .toast-mean { font-size: 10px; color: #8c8075; display: block; }
+  .anno-card .ac-hanja { font-family: 'Noto Serif KR', serif; font-size: 20px; font-weight: 400; color: var(--text); line-height: 1.3; }
+  .anno-card .ac-mean { font-size: 12px; color: var(--accent); line-height: 1.3; margin-top: 2px; }
+  .anno-card .ac-read { font-size: 12px; color: var(--muted); line-height: 1.3; }
+  .anno-break { width: 100%; height: 8px; }
+  .anno-punct { font-size: 16px; color: var(--muted); align-self: center; padding: 0 2px; }
   .text-literal {
     font-size: 14px; line-height: 1.9; color: var(--text);
     margin-bottom: 1.6rem; white-space: pre-line;
@@ -296,12 +300,12 @@
   </select>
 </div>
 
-<div class="hanja-toast" id="hanjaToast">
-  <div class="toast-header">
-    <span>한자 풀이</span>
-    <button class="toast-close" onclick="closeToast()">×</button>
+<div class="hanja-overlay" id="hanjaOverlay" onclick="closeHanjaModal(event)">
+  <div class="hanja-modal">
+    <button class="hanja-modal-close" onclick="closeHanjaModal()">×</button>
+    <div class="hanja-modal-title">한자 풀이 漢字</div>
+    <div id="hanjaGrid"></div>
   </div>
-  <div class="toast-grid" id="toastGrid"></div>
 </div>
 
 <div class="layout">
@@ -314,46 +318,43 @@
 
 <script src="data.js"></script>
 <script>
-// ===== 한자 사전 =====
+// ===== 한자 사전 (뜻+음) =====
 const HANJA_DICT = {
-  '北':'북','冥':'명','有':'유','魚':'어','其':'기','名':'명','為':'위','鯤':'곤',
-  '大':'대','不':'불','知':'지','幾':'기','千':'천','里':'리','也':'야','化':'화',
-  '而':'이','鳥':'조','鵬':'붕','背':'배','怒':'노','飛':'비','翼':'익','若':'약',
-  '垂':'수','天':'천','雲':'운','是':'시','海':'해','運':'운','則':'칙','將':'장',
-  '徙':'사','於':'어','南':'남','者':'자','池':'지','齊':'제','諧':'해','志':'지',
-  '怪':'괴','言':'언','曰':'왈','之':'지','水':'수','擊':'격','三':'삼','摶':'단',
-  '扶':'부','搖':'요','上':'상','九':'구','萬':'만','去':'거','以':'이','六':'육',
-  '月':'월','息':'식','野':'야','馬':'마','塵':'진','埃':'애','生':'생','物':'물',
-  '相':'상','吹':'취','蒼':'창','正':'정','色':'색','邪':'사','遠':'원','無':'무',
-  '所':'소','至':'지','極':'극','視':'시','下':'하','亦':'역','如':'여','此':'차',
-  '矣':'의','蜩':'조','與':'여','學':'학','鳩':'구','笑':'소','決':'결','起':'기',
-  '搶':'창','榆':'유','枋':'방','止':'지','時':'시','地':'지','奚':'해','二':'이',
-  '蟲':'충','又':'우','何':'하','適':'적','莽':'망','餐':'찬','反':'반','腹':'복',
-  '猶':'유','果':'과','百':'백','宿':'숙','舂':'용','糧':'량','聚':'취','小':'소',
-  '及':'급','年':'년','朝':'조','菌':'균','晦':'회','朔':'삭','蟪':'혜','蛄':'고',
-  '春':'춘','秋':'추','故':'고','夫':'부','效':'효','一':'일','官':'관','行':'행',
-  '比':'비','鄉':'향','德':'덕','合':'합','君':'군','徵':'징','國':'국','自':'자',
-  '宋':'송','榮':'영','子':'자','然':'연','舉':'거','世':'세','譽':'예','加':'가',
-  '勸':'권','非':'비','沮':'저','定':'정','乎':'호','內':'내','外':'외','分':'분',
-  '辯':'변','辱':'욕','境':'경','斯':'사','已':'이','彼':'피','未':'미','數':'수',
-  '雖':'수','樹':'수','列':'열','御':'어','風':'풍','泠':'령','善':'선','旬':'순',
-  '五':'오','日':'일','後':'후','致':'치','福':'복','免':'면','待':'대','乘':'승',
-  '地':'지','氣':'기','窮':'궁','且':'차','惡':'악','曰':'왈','人':'인','己':'기',
-  '神':'신','功':'공','聖':'성','惠':'혜','謂':'위','吾':'오','樗':'저','本':'본',
-  '擁':'옹','腫':'종','中':'중','繩':'승','墨':'묵','枝':'지','卷':'권','曲':'곡',
-  '規':'규','矩':'구','立':'립','塗':'도','匠':'장','顧':'고','今':'금','言':'언',
-  '衆':'중','莫':'막','獨':'독','見':'견','狸':'리','狌':'성','卑':'비','身':'신',
-  '伏':'복','候':'후','敖':'오','東':'동','西':'서','跳':'도','梁':'량','辟':'벽',
-  '高':'고','機':'기','死':'사','罔':'망','罟':'고','斄':'리','牛':'우','執':'집',
-  '鼠':'서','患':'환','有':'유','廣':'광','漠':'막','側':'측','逍':'소','遙':'요',
-  '寢':'침','臥':'와','夭':'요','斤':'근','斧':'부','害':'해','安':'안','困':'곤',
-  '苦':'고','在':'재','宥':'유','天':'천','道':'도','帝':'제','王':'왕','人':'인',
-  '間':'간','世':'세','養':'양','主':'주','充':'충','符':'부','宗':'종','師':'사',
-  '應':'응','物':'물','論':'론','駢':'변','拇':'무','馬':'마','蹄':'제','胠':'거',
-  '篋':'협','秋':'추','樂':'락','達':'달','山':'산','木':'목','田':'전','方':'방',
-  '北':'북','遊':'유','逍':'소','遙':'요','遊':'유','齊':'제','物':'물','論':'론',
-  '莊':'장','周':'주','惠':'혜','施':'시','列':'열','禦':'어','寇':'구','盜':'도',
-  '心':'심','齋':'재','坐':'좌','忘':'망','真':'진','知':'지','得':'득','道':'도',
+  '北':{m:'북녘',r:'북'},'冥':{m:'어두울',r:'명'},'有':{m:'있을',r:'유'},'魚':{m:'물고기',r:'어'},'其':{m:'그',r:'기'},'名':{m:'이름',r:'명'},'為':{m:'할',r:'위'},'鯤':{m:'곤어',r:'곤'},
+  '大':{m:'클',r:'대'},'不':{m:'아닐',r:'불'},'知':{m:'알',r:'지'},'幾':{m:'몇',r:'기'},'千':{m:'일천',r:'천'},'里':{m:'마을',r:'리'},'也':{m:'어조사',r:'야'},'化':{m:'될',r:'화'},
+  '而':{m:'말이을',r:'이'},'鳥':{m:'새',r:'조'},'鵬':{m:'붕새',r:'붕'},'背':{m:'등',r:'배'},'怒':{m:'성낼',r:'노'},'飛':{m:'날',r:'비'},'翼':{m:'날개',r:'익'},'若':{m:'같을',r:'약'},
+  '垂':{m:'드리울',r:'수'},'天':{m:'하늘',r:'천'},'雲':{m:'구름',r:'운'},'是':{m:'이',r:'시'},'海':{m:'바다',r:'해'},'運':{m:'운행할',r:'운'},'則':{m:'법칙',r:'칙'},'將':{m:'장차',r:'장'},
+  '徙':{m:'옮길',r:'사'},'於':{m:'어조사',r:'어'},'南':{m:'남녘',r:'남'},'者':{m:'것',r:'자'},'池':{m:'못',r:'지'},'齊':{m:'가지런할',r:'제'},'諧':{m:'화할',r:'해'},'志':{m:'뜻',r:'지'},
+  '怪':{m:'괴이할',r:'괴'},'言':{m:'말씀',r:'언'},'曰':{m:'가로',r:'왈'},'之':{m:'갈',r:'지'},'水':{m:'물',r:'수'},'擊':{m:'칠',r:'격'},'三':{m:'석',r:'삼'},'摶':{m:'뭉칠',r:'단'},
+  '扶':{m:'도울',r:'부'},'搖':{m:'흔들',r:'요'},'上':{m:'위',r:'상'},'九':{m:'아홉',r:'구'},'萬':{m:'일만',r:'만'},'去':{m:'갈',r:'거'},'以':{m:'써',r:'이'},'六':{m:'여섯',r:'육'},
+  '月':{m:'달',r:'월'},'息':{m:'쉴',r:'식'},'野':{m:'들',r:'야'},'馬':{m:'말',r:'마'},'塵':{m:'티끌',r:'진'},'埃':{m:'먼지',r:'애'},'生':{m:'날',r:'생'},'物':{m:'물건',r:'물'},
+  '相':{m:'서로',r:'상'},'吹':{m:'불',r:'취'},'蒼':{m:'푸를',r:'창'},'正':{m:'바를',r:'정'},'色':{m:'빛',r:'색'},'邪':{m:'간사할',r:'사'},'遠':{m:'멀',r:'원'},'無':{m:'없을',r:'무'},
+  '所':{m:'바',r:'소'},'至':{m:'이를',r:'지'},'極':{m:'다할',r:'극'},'視':{m:'볼',r:'시'},'下':{m:'아래',r:'하'},'亦':{m:'또',r:'역'},'如':{m:'같을',r:'여'},'此':{m:'이',r:'차'},
+  '矣':{m:'어조사',r:'의'},'蜩':{m:'매미',r:'조'},'與':{m:'더불',r:'여'},'學':{m:'배울',r:'학'},'鳩':{m:'비둘기',r:'구'},'笑':{m:'웃을',r:'소'},'決':{m:'결단할',r:'결'},'起':{m:'일어날',r:'기'},
+  '搶':{m:'닿을',r:'창'},'榆':{m:'느릅나무',r:'유'},'枋':{m:'나무',r:'방'},'止':{m:'그칠',r:'지'},'時':{m:'때',r:'시'},'地':{m:'땅',r:'지'},'奚':{m:'어찌',r:'해'},'二':{m:'두',r:'이'},
+  '蟲':{m:'벌레',r:'충'},'又':{m:'또',r:'우'},'何':{m:'어찌',r:'하'},'適':{m:'갈',r:'적'},'莽':{m:'거칠',r:'망'},'餐':{m:'밥',r:'찬'},'反':{m:'돌아올',r:'반'},'腹':{m:'배',r:'복'},
+  '猶':{m:'오히려',r:'유'},'果':{m:'열매',r:'과'},'百':{m:'일백',r:'백'},'宿':{m:'잘',r:'숙'},'舂':{m:'찧을',r:'용'},'糧':{m:'양식',r:'량'},'聚':{m:'모을',r:'취'},'小':{m:'작을',r:'소'},
+  '及':{m:'미칠',r:'급'},'年':{m:'해',r:'년'},'朝':{m:'아침',r:'조'},'菌':{m:'버섯',r:'균'},'晦':{m:'그믐',r:'회'},'朔':{m:'초하루',r:'삭'},'蟪':{m:'쓰르라미',r:'혜'},'蛄':{m:'쓰르라미',r:'고'},
+  '春':{m:'봄',r:'춘'},'秋':{m:'가을',r:'추'},'故':{m:'연고',r:'고'},'夫':{m:'지아비',r:'부'},'效':{m:'본받을',r:'효'},'一':{m:'한',r:'일'},'官':{m:'벼슬',r:'관'},'行':{m:'다닐',r:'행'},
+  '比':{m:'견줄',r:'비'},'鄉':{m:'시골',r:'향'},'德':{m:'덕',r:'덕'},'合':{m:'합할',r:'합'},'君':{m:'임금',r:'군'},'徵':{m:'부를',r:'징'},'國':{m:'나라',r:'국'},'自':{m:'스스로',r:'자'},
+  '宋':{m:'송나라',r:'송'},'榮':{m:'영화',r:'영'},'子':{m:'아들',r:'자'},'然':{m:'그러할',r:'연'},'舉':{m:'들',r:'거'},'世':{m:'세상',r:'세'},'譽':{m:'기릴',r:'예'},'加':{m:'더할',r:'가'},
+  '勸':{m:'권할',r:'권'},'非':{m:'아닐',r:'비'},'沮':{m:'꺾을',r:'저'},'定':{m:'정할',r:'정'},'乎':{m:'어조사',r:'호'},'內':{m:'안',r:'내'},'外':{m:'바깥',r:'외'},'分':{m:'나눌',r:'분'},
+  '辯':{m:'말씀',r:'변'},'辱':{m:'욕될',r:'욕'},'境':{m:'지경',r:'경'},'斯':{m:'이',r:'사'},'已':{m:'이미',r:'이'},'彼':{m:'저',r:'피'},'未':{m:'아닐',r:'미'},'數':{m:'셀',r:'수'},
+  '雖':{m:'비록',r:'수'},'樹':{m:'나무',r:'수'},'列':{m:'벌일',r:'열'},'御':{m:'거느릴',r:'어'},'風':{m:'바람',r:'풍'},'泠':{m:'맑을',r:'령'},'善':{m:'착할',r:'선'},'旬':{m:'열흘',r:'순'},
+  '五':{m:'다섯',r:'오'},'日':{m:'날',r:'일'},'後':{m:'뒤',r:'후'},'致':{m:'이를',r:'치'},'福':{m:'복',r:'복'},'免':{m:'면할',r:'면'},'待':{m:'기다릴',r:'대'},'乘':{m:'탈',r:'승'},
+  '氣':{m:'기운',r:'기'},'窮':{m:'다할',r:'궁'},'且':{m:'또',r:'차'},'惡':{m:'나쁠',r:'악'},'人':{m:'사람',r:'인'},'己':{m:'몸',r:'기'},'神':{m:'귀신',r:'신'},'功':{m:'공',r:'공'},
+  '聖':{m:'성인',r:'성'},'惠':{m:'은혜',r:'혜'},'謂':{m:'이를',r:'위'},'吾':{m:'나',r:'오'},'樗':{m:'가죽나무',r:'저'},'本':{m:'근본',r:'본'},'擁':{m:'막힐',r:'옹'},'腫':{m:'부을',r:'종'},
+  '中':{m:'가운데',r:'중'},'繩':{m:'줄',r:'승'},'墨':{m:'먹',r:'묵'},'枝':{m:'가지',r:'지'},'卷':{m:'굽을',r:'권'},'曲':{m:'굽을',r:'곡'},'規':{m:'그림쇠',r:'규'},'矩':{m:'곱자',r:'구'},
+  '立':{m:'설',r:'립'},'塗':{m:'길',r:'도'},'匠':{m:'장인',r:'장'},'顧':{m:'돌아볼',r:'고'},'今':{m:'이제',r:'금'},'衆':{m:'무리',r:'중'},'莫':{m:'없을',r:'막'},'獨':{m:'홀로',r:'독'},
+  '見':{m:'볼',r:'견'},'狸':{m:'너구리',r:'리'},'狌':{m:'살쾡이',r:'성'},'卑':{m:'낮을',r:'비'},'身':{m:'몸',r:'신'},'伏':{m:'엎드릴',r:'복'},'候':{m:'기다릴',r:'후'},'敖':{m:'거닐',r:'오'},
+  '東':{m:'동녘',r:'동'},'西':{m:'서녘',r:'서'},'跳':{m:'뛸',r:'도'},'梁':{m:'들보',r:'량'},'辟':{m:'피할',r:'벽'},'高':{m:'높을',r:'고'},'機':{m:'기계',r:'기'},'死':{m:'죽을',r:'사'},
+  '罔':{m:'없을',r:'망'},'罟':{m:'그물',r:'고'},'斄':{m:'들소',r:'리'},'牛':{m:'소',r:'우'},'執':{m:'잡을',r:'집'},'鼠':{m:'쥐',r:'서'},'患':{m:'근심',r:'환'},'廣':{m:'넓을',r:'광'},
+  '漠':{m:'사막',r:'막'},'側':{m:'곁',r:'측'},'逍':{m:'노닐',r:'소'},'遙':{m:'멀',r:'요'},'寢':{m:'잘',r:'침'},'臥':{m:'누울',r:'와'},'夭':{m:'일찍죽을',r:'요'},'斤':{m:'도끼',r:'근'},
+  '斧':{m:'도끼',r:'부'},'害':{m:'해칠',r:'해'},'安':{m:'편안',r:'안'},'困':{m:'곤할',r:'곤'},'苦':{m:'쓸',r:'고'},'在':{m:'있을',r:'재'},'宥':{m:'용서할',r:'유'},'道':{m:'길',r:'도'},
+  '帝':{m:'임금',r:'제'},'王':{m:'임금',r:'왕'},'間':{m:'사이',r:'간'},'養':{m:'기를',r:'양'},'主':{m:'주인',r:'주'},'充':{m:'찰',r:'충'},'符':{m:'부호',r:'부'},'宗':{m:'마루',r:'종'},
+  '師':{m:'스승',r:'사'},'應':{m:'응할',r:'응'},'論':{m:'논할',r:'론'},'莊':{m:'씩씩할',r:'장'},'周':{m:'두루',r:'주'},'施':{m:'베풀',r:'시'},'心':{m:'마음',r:'심'},'齋':{m:'재계할',r:'재'},
+  '坐':{m:'앉을',r:'좌'},'忘':{m:'잊을',r:'망'},'真':{m:'참',r:'진'},'得':{m:'얻을',r:'득'},'遊':{m:'놀',r:'유'},'駢':{m:'나란히할',r:'변'},'拇':{m:'엄지',r:'무'},'蹄':{m:'발굽',r:'제'},
+  '胠':{m:'옆구리',r:'거'},'篋':{m:'상자',r:'협'},'樂':{m:'즐거울',r:'락'},'達':{m:'통달할',r:'달'},'山':{m:'뫼',r:'산'},'木':{m:'나무',r:'목'},'田':{m:'밭',r:'전'},'方':{m:'모',r:'방'},
 };
 
 function isCJK(ch) {
@@ -366,7 +367,7 @@ function rubyText(text) {
     let out = '';
     for (const ch of line) {
       if (isCJK(ch) && HANJA_DICT[ch]) {
-        out += `<ruby>${ch}<rt>${HANJA_DICT[ch]}</rt></ruby>`;
+        out += `<ruby>${ch}<rt>${HANJA_DICT[ch].r}</rt></ruby>`;
       } else {
         out += ch.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       }
@@ -375,31 +376,40 @@ function rubyText(text) {
   }).join('');
 }
 
-function showToast(storyId) {
+function showHanjaModal(storyId) {
   let text = '';
-  for (const ch of JANGJA) {
-    const s = ch.stories.find(s => s.id === storyId);
+  for (const chapter of JANGJA) {
+    const s = chapter.stories.find(s => s.id === storyId);
     if (s) { text = s.text; break; }
   }
   if (!text) return;
-  const seen = new Set();
-  const items = [];
-  for (const ch of text) {
-    if (isCJK(ch) && !seen.has(ch)) {
-      seen.add(ch);
-      const read = HANJA_DICT[ch] || '?';
-      items.push(`<div class="toast-item">
-        <span class="toast-char">${ch}</span>
-        <span class="toast-read">${read}</span>
-      </div>`);
+  const lines = text.split('\n');
+  let html = '';
+  lines.forEach((line, i) => {
+    html += '<div class="anno-grid">';
+    for (const ch of line) {
+      if (isCJK(ch)) {
+        const info = HANJA_DICT[ch];
+        if (info) {
+          html += `<div class="anno-card"><span class="ac-hanja">${ch}</span><span class="ac-mean">${info.m}</span><span class="ac-read">${info.r}</span></div>`;
+        } else {
+          html += `<div class="anno-card"><span class="ac-hanja">${ch}</span><span class="ac-mean"> </span><span class="ac-read"> </span></div>`;
+        }
+      } else if (/[，。？！、；：「」『』]/.test(ch)) {
+        html += `<span class="anno-punct">${ch}</span>`;
+      }
     }
-  }
-  document.getElementById('toastGrid').innerHTML = items.join('');
-  document.getElementById('hanjaToast').classList.add('show');
+    html += '</div>';
+    if (i < lines.length - 1) html += '<div class="anno-break"></div>';
+  });
+  document.getElementById('hanjaGrid').innerHTML = html;
+  document.getElementById('hanjaOverlay').classList.add('open');
 }
 
-function closeToast() {
-  document.getElementById('hanjaToast').classList.remove('show');
+function closeHanjaModal(e) {
+  if (!e || e.target === document.getElementById('hanjaOverlay')) {
+    document.getElementById('hanjaOverlay').classList.remove('open');
+  }
 }
 
 // ===== 데이터 준비 =====
@@ -521,7 +531,7 @@ function renderChapter(ch) {
         </div>
         <div class="story-body">
           <div class="section-label">원문 <span style="font-size:9px;color:var(--muted);font-weight:300;letter-spacing:0">· 클릭하면 한자 풀이</span></div>
-          <div class="text-original" onclick="showToast('${s.id}')">${rubyText(s.text)}</div>
+          <div class="text-original" onclick="showHanjaModal('${s.id}')">${rubyText(s.text)}</div>
           <hr class="section-divider">
           <div class="section-label">직역</div>
           <div class="text-literal">${esc(s.literal)}</div>

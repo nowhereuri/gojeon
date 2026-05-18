@@ -303,6 +303,15 @@
   .section-divider { border: none; border-top: 1px solid var(--border); margin: 1.4rem 0; }
 
   /* 준비 중 */
+  .nav-btns { display:flex; justify-content:space-between; margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border); }
+  .nav-btn {
+    padding:8px 18px; border:1px solid var(--border); border-radius:4px;
+    background:transparent; font-family:'Noto Sans KR',sans-serif;
+    font-size:13px; color:var(--muted); cursor:pointer; transition:all 0.2s;
+  }
+  .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .nav-btn:disabled { opacity:0.3; cursor:default; pointer-events:none; }
+
   .coming-soon {
     text-align: center; padding: 5rem 2rem;
     color: var(--muted); font-size: 14px;
@@ -1087,6 +1096,11 @@ function renderChapter(ch) {
       </div>`;
   });
 
+  const all = getAllChapters();
+  const idx = all.findIndex(c => c.id === ch.id);
+  const prev = all[idx - 1];
+  const next = all[idx + 1];
+
   view.innerHTML = `
     <div class="chapter-header">
       <div class="ch-type">${ch.type} ${ch.number}편</div>
@@ -1108,7 +1122,15 @@ function renderChapter(ch) {
         </div>
       </div>` : ''}
     </div>
-    ${storiesHtml}`;
+    ${storiesHtml}
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="selectChapterById('${prev ? prev.id : ''}')" ${!prev ? 'disabled' : ''}>
+        ← ${prev ? prev.number + '편 ' + prev.ko : ''}
+      </button>
+      <button class="nav-btn" onclick="selectChapterById('${next ? next.id : ''}')" ${!next ? 'disabled' : ''}>
+        ${next ? next.number + '편 ' + next.ko : ''} →
+      </button>
+    </div>`;
 }
 
 function toggleIntro(chapterId) {

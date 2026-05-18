@@ -94,6 +94,27 @@
     padding:1.4rem 1.6rem; font-size:15px; line-height:2; color:var(--text);
   }
 
+  /* ===== 해설 아코디언 ===== */
+  .commentary-wrap { margin-top:1.2rem; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+  .commentary-toggle {
+    width:100%; padding:0.9rem 1.2rem;
+    background:var(--bg); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:'Noto Sans KR',sans-serif; font-size:13px; color:var(--muted);
+    transition:background 0.2s;
+  }
+  .commentary-toggle:hover { background:var(--highlight); }
+  .commentary-toggle .ct-label { display:flex; align-items:center; gap:6px; }
+  .commentary-toggle .ct-arrow { font-size:11px; transition:transform 0.3s; }
+  .commentary-wrap.open .ct-arrow { transform:rotate(180deg); }
+  .commentary-body { max-height:0; overflow:hidden; transition:max-height 0.4s ease; }
+  .commentary-wrap.open .commentary-body { max-height:2000px; }
+  .commentary-content {
+    padding:1.2rem 1.4rem; border-top:1px solid var(--border);
+    font-size:14px; line-height:2; color:var(--text);
+    white-space:pre-wrap;
+  }
+
   .nav-btns { display:flex; justify-content:space-between; margin-top:2rem; }
   .nav-btn {
     padding:8px 18px; border:1px solid var(--border); border-radius:4px;
@@ -464,6 +485,17 @@ function renderChapter() {
     <div class="section-label">번역</div>
     <div class="meaning-box">${(d.meaning || '').replace(/\n/g, '<br>')}</div>
 
+    ${d.commentary ? `
+    <div class="commentary-wrap" id="commentary-${d.id}">
+      <button class="commentary-toggle" onclick="toggleCommentary('${d.id}')">
+        <span class="ct-label">📖 해설</span>
+        <span class="ct-arrow">▼</span>
+      </button>
+      <div class="commentary-body">
+        <div class="commentary-content">${d.commentary.trim()}</div>
+      </div>
+    </div>` : ''}
+
     <div class="nav-btns">
       <button class="nav-btn" onclick="selectById('${prev ? prev.id : ''}')" ${!prev ? 'disabled' : ''}>
         ← ${prev ? '제' + prev.num + '분' : ''}
@@ -473,6 +505,11 @@ function renderChapter() {
       </button>
     </div>
   `;
+}
+
+function toggleCommentary(id) {
+  const wrap = document.getElementById('commentary-' + id);
+  if (wrap) wrap.classList.toggle('open');
 }
 
 function hl(text, q) {

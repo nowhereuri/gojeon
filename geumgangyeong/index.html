@@ -3,250 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>금강경 검색 — 金剛經</title>
+<title>금강경 — 金剛般若波羅蜜經</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
-
   :root {
-    --bg: #f7f4ef;
-    --surface: #fefcf8;
-    --border: #ddd8ce;
-    --text: #2a2520;
-    --muted: #8c8075;
-    --accent: #6b4c2a;
-    --highlight: #e8dfd0;
-    --tag-bun: #5a4a6b;
+    --bg:#f7f4ef; --surface:#fefcf8; --border:#ddd8ce;
+    --text:#2a2520; --muted:#8c8075; --accent:#7a5c3a;
+    --highlight:#e8dfd0; --sidebar-w:220px;
   }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; font-weight:300; min-height:100vh; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 300;
-    min-height: 100vh;
-  }
-
+  /* ===== 헤더 ===== */
   header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 2rem 1.5rem 1.5rem;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    background:var(--surface); border-bottom:1px solid var(--border);
+    padding:1rem 1.5rem; position:sticky; top:0; z-index:100;
   }
-
-  .header-inner { max-width: 860px; margin: 0 auto; }
-  .logo-row { display: flex; align-items: center; justify-content: space-between; }
-  .home-link { font-size:11px; color:var(--muted); text-decoration:none; border:1px solid var(--border); padding:3px 10px; border-radius:20px; transition: all 0.2s; }
+  .header-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+  .logo { font-family:'Noto Serif KR',serif; font-size:20px; font-weight:600; color:var(--accent); letter-spacing:2px; white-space:nowrap; }
+  .logo-sub { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .home-link { font-size:11px; color:var(--muted); text-decoration:none; border:1px solid var(--border); padding:3px 10px; border-radius:20px; transition:all 0.2s; white-space:nowrap; }
   .home-link:hover { color:var(--accent); border-color:var(--accent); }
-
-  .logo {
-    font-family: 'Noto Serif KR', serif;
-    font-size: 22px; font-weight: 600;
-    color: var(--accent); letter-spacing: 2px; margin-bottom: 0.3rem;
-  }
-
-  .logo-sub {
-    font-size: 12px; color: var(--muted);
-    letter-spacing: 1px; margin-bottom: 1.2rem;
-  }
-
-  .search-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
-
   .search-input {
-    flex: 1; min-width: 200px; padding: 10px 16px;
-    border: 1px solid var(--border); border-radius: 4px;
-    background: var(--bg); font-family: 'Noto Sans KR', sans-serif;
-    font-size: 15px; color: var(--text); outline: none;
-    transition: border-color 0.2s;
+    flex:1; min-width:180px; padding:8px 14px;
+    border:1px solid var(--border); border-radius:4px;
+    background:var(--bg); font-family:'Noto Sans KR',sans-serif;
+    font-size:14px; color:var(--text); outline:none; transition:border-color 0.2s;
   }
-  .search-input:focus { border-color: var(--accent); }
+  .search-input:focus { border-color:var(--accent); }
 
-  .filter-btn {
-    padding: 10px 16px; border: 1px solid var(--border); border-radius: 4px;
-    background: var(--bg); font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.2s;
+  /* ===== 레이아웃 ===== */
+  .layout { display:flex; max-width:1100px; margin:0 auto; min-height:calc(100vh - 60px); }
+
+  /* ===== 사이드바 ===== */
+  .sidebar {
+    width:var(--sidebar-w); flex-shrink:0;
+    border-right:1px solid var(--border); background:var(--surface);
+    position:sticky; top:60px; height:calc(100vh - 60px);
+    overflow-y:auto; padding:1rem 0;
   }
-  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-  .stats { font-size: 12px; color: var(--muted); margin-top: 0.8rem; }
-  .stats span { color: var(--accent); font-weight: 500; }
-
-  main { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
-
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 6px; padding: 1.4rem 1.6rem; margin-bottom: 12px;
-    cursor: pointer; transition: all 0.2s;
+  .sidebar-item {
+    display:flex; align-items:baseline; gap:6px;
+    padding:7px 16px; cursor:pointer; transition:background 0.15s;
+    border-left:3px solid transparent; font-size:13px;
   }
-  .card:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(107,76,42,0.08); }
+  .sidebar-item:hover { background:var(--highlight); }
+  .sidebar-item.active { border-left-color:var(--accent); background:var(--highlight); font-weight:500; }
+  .sidebar-num { font-size:11px; color:var(--muted); min-width:28px; }
+  .sidebar-title { font-family:'Noto Serif KR',serif; font-size:13px; color:var(--accent); }
+  .sidebar-ko { font-size:11px; color:var(--muted); }
 
-  .card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 0.8rem; }
-
-  .tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.5px; }
-  .tag-bun { background: #ece6f0; color: var(--tag-bun); }
-
-  .num { font-size: 13px; color: var(--muted); font-family: 'Noto Serif KR', serif; }
-
-  .bun-title {
-    font-family: 'Noto Serif KR', serif;
-    font-size: 14px; color: var(--accent); font-weight: 400;
+  /* 검색 결과 모드 */
+  .sidebar-search-item {
+    padding:6px 16px; cursor:pointer; font-size:12px; color:var(--muted);
+    transition:background 0.15s;
   }
+  .sidebar-search-item:hover { background:var(--highlight); color:var(--accent); }
 
-  .hanja { font-family: 'Noto Serif KR', serif; font-size: 16px; line-height: 1.9; color: var(--text); font-weight: 400; }
-  .hanja .line { display: block; }
+  /* ===== 메인 ===== */
+  .main { flex:1; padding:2rem 2.5rem; min-width:0; }
 
-  .written-badge {
-    margin-left: auto; font-size: 11px; padding: 2px 8px;
-    border-radius: 20px; background: #e8f0e6; color: #4a6741;
+  /* 검색 결과 카드 목록 */
+  .search-result-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+    padding:1.2rem 1.5rem; margin-bottom:10px; cursor:pointer; transition:all 0.2s;
   }
+  .search-result-card:hover { border-color:var(--accent); box-shadow:0 2px 10px rgba(122,92,58,0.08); }
+  .src-top { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .src-tag { font-size:11px; padding:2px 8px; border-radius:20px; background:#ece6f0; color:#5a4a6b; font-weight:500; }
+  .src-title { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--accent); }
+  .src-ko { font-size:12px; color:var(--muted); }
+  .src-preview { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--text); line-height:1.8; margin-top:4px; }
+  mark { background:#fde68a; color:inherit; border-radius:2px; padding:0 1px; }
 
-  .fav-badge {
-    font-size: 11px; padding: 2px 8px; border-radius: 20px;
-    background: #fff3e0; color: #b8860b;
-  }
+  /* 분 상세 뷰 */
+  .chapter-header { margin-bottom:1.8rem; }
+  .chapter-num { font-size:12px; color:var(--muted); margin-bottom:0.3rem; }
+  .chapter-title { font-family:'Noto Serif KR',serif; font-size:26px; font-weight:600; color:var(--accent); margin-bottom:0.2rem; }
+  .chapter-ko { font-size:14px; color:var(--muted); }
 
-  .empty { text-align: center; padding: 4rem 1rem; color: var(--muted); font-size: 15px; }
-  .empty .em { font-family: 'Noto Serif KR', serif; font-size: 28px; color: var(--border); display: block; margin-bottom: 1rem; }
+  .section-label { font-size:11px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; font-weight:500; }
+  .original-text { font-family:'Noto Serif KR',serif; font-size:17px; line-height:2.2; color:var(--text); margin-bottom:2rem; }
+  .original-text ruby { cursor:pointer; }
+  .original-text ruby:hover rt { color:var(--accent); }
+  .original-text ruby rt { font-size:10px; color:var(--muted); ruby-position:under; transition:color 0.15s; }
 
-  mark { background: #fde68a; color: inherit; border-radius: 2px; padding: 0 1px; }
-
-  /* ===== 상세 모달 ===== */
-  .modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.4); z-index: 200;
-    justify-content: center; align-items: flex-start;
-    overflow-y: auto; padding: 2rem 1rem;
-  }
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface); border-radius: 10px;
-    max-width: 720px; width: 100%; padding: 2rem;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
-    position: relative;
+  .meaning-box {
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+    padding:1.4rem 1.6rem; font-size:15px; line-height:2; color:var(--text);
   }
 
-  .modal-close {
-    position: absolute; top: 1rem; right: 1rem;
-    background: none; border: none; font-size: 22px;
-    color: var(--muted); cursor: pointer;
+  .nav-btns { display:flex; justify-content:space-between; margin-top:2rem; }
+  .nav-btn {
+    padding:8px 18px; border:1px solid var(--border); border-radius:4px;
+    background:transparent; font-family:'Noto Sans KR',sans-serif;
+    font-size:13px; color:var(--muted); cursor:pointer; transition:all 0.2s;
   }
+  .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .nav-btn:disabled { opacity:0.3; cursor:default; }
 
-  .modal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  /* ===== 한자 클릭 모달 ===== */
+  .hanja-modal-overlay {
+    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.35); z-index:300; justify-content:center; align-items:center;
+  }
+  .hanja-modal-overlay.open { display:flex; }
+  .hanja-modal {
+    background:var(--surface); border-radius:10px; padding:1.6rem 2rem;
+    box-shadow:0 8px 40px rgba(0,0,0,0.15); min-width:180px; text-align:center; position:relative;
+  }
+  .hanja-modal-close { position:absolute; top:0.6rem; right:0.8rem; background:none; border:none; font-size:18px; color:var(--muted); cursor:pointer; }
+  .hm-char { font-family:'Noto Serif KR',serif; font-size:52px; color:var(--text); line-height:1.2; }
+  .hm-mean { font-size:16px; color:var(--accent); margin-top:0.4rem; }
+  .hm-read { font-size:14px; color:var(--muted); margin-top:0.2rem; }
 
-  .modal-section { margin-bottom: 1.5rem; }
-  .modal-section-title {
-    font-size: 11px; color: var(--muted); letter-spacing: 1.5px;
-    text-transform: uppercase; margin-bottom: 8px; font-weight: 500;
-  }
-  .modal-section-body {
-    font-size: 15px; line-height: 1.9; color: var(--text);
-  }
-  .modal-section-body.hanja-text {
-    font-family: 'Noto Serif KR', serif; font-weight: 400;
-  }
+  /* ===== 모바일 ===== */
+  .chapter-select-wrap { display:none; padding:0.8rem 1rem; background:var(--surface); border-bottom:1px solid var(--border); }
+  .chapter-select { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:4px; background:var(--bg); font-family:'Noto Sans KR',sans-serif; font-size:14px; color:var(--text); outline:none; }
 
-  .hanja-ruby ruby { font-size: 18px; ruby-position: under; }
-  .hanja-ruby ruby rt { font-size: 12px; color: var(--accent); ruby-align: center; }
+  .empty { text-align:center; padding:4rem 1rem; color:var(--muted); font-size:15px; }
+  .empty .em { font-family:'Noto Serif KR',serif; font-size:28px; color:var(--border); display:block; margin-bottom:1rem; }
 
-  .anno-grid {
-    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
-  }
-  .anno-card {
-    display: flex; flex-direction: column; align-items: center;
-    min-width: 52px; padding: 6px 8px;
-    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-  }
-  .anno-card .ac-hanja {
-    font-family: 'Noto Serif KR', serif;
-    font-size: 20px; font-weight: 400; color: var(--text); line-height: 1.3;
-  }
-  .anno-card .ac-mean {
-    font-size: 12px; color: var(--accent); line-height: 1.3; margin-top: 2px;
-  }
-  .anno-card .ac-read {
-    font-size: 12px; color: var(--muted); line-height: 1.3;
-  }
-  .anno-break { width: 100%; height: 8px; }
-  .anno-punct { font-size: 16px; color: var(--muted); align-self: center; padding: 0 2px; }
-
-  .modal-memo {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--border);
-    border-radius: 4px; background: var(--bg);
-    font-family: 'Noto Sans KR', sans-serif; font-size: 13px;
-    color: var(--text); resize: none; min-height: 70px; outline: none;
-  }
-  .modal-memo:focus { border-color: var(--accent); }
-
-  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1.5rem; }
-  .modal-btn {
-    padding: 8px 18px; border: 1px solid var(--border); border-radius: 4px;
-    background: transparent; font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.2s;
-  }
-  .modal-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .modal-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-  .toast {
-    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-    background: var(--text); color: #fff; padding: 10px 24px;
-    border-radius: 8px; font-size: 13px; z-index: 300;
-    opacity: 0; transition: opacity 0.3s; pointer-events: none;
-  }
-  .toast.show { opacity: 1; }
-
-  /* ===== 개요 패널 ===== */
-  .overview {
-    max-width: 860px; margin: 1.5rem auto 0; padding: 0 1.5rem;
-  }
-  .overview-toggle {
-    width: 100%; padding: 1.2rem 1.6rem;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-    cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-    font-family: 'Noto Serif KR', serif; font-size: 16px; font-weight: 400;
-    color: var(--accent); transition: all 0.2s;
-  }
-  .overview-toggle:hover { border-color: var(--accent); }
-  .overview-toggle .arrow { font-size: 12px; color: var(--muted); transition: transform 0.3s; }
-  .overview-toggle.open .arrow { transform: rotate(180deg); }
-  .overview-body {
-    max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
-    background: var(--surface); border: 1px solid var(--border); border-top: none;
-    border-radius: 0 0 6px 6px;
-  }
-  .overview-toggle.open + .overview-body { max-height: 2000px; }
-  .overview-toggle.open { border-radius: 6px 6px 0 0; }
-  .overview-content {
-    padding: 1.6rem;
-    font-size: 14px; line-height: 2; color: var(--text);
-  }
-  .overview-content h3 {
-    font-family: 'Noto Serif KR', serif; font-size: 15px; font-weight: 600;
-    color: var(--accent); margin: 1.5rem 0 0.5rem; padding-bottom: 4px;
-    border-bottom: 1px solid var(--border);
-  }
-  .overview-content h3:first-child { margin-top: 0; }
-  .overview-content table {
-    width: 100%; border-collapse: collapse; margin: 0.5rem 0;
-    font-size: 13px;
-  }
-  .overview-content th {
-    text-align: left; padding: 6px 10px; background: var(--bg);
-    border: 1px solid var(--border); font-weight: 500; color: var(--accent);
-    white-space: nowrap;
-  }
-  .overview-content td {
-    padding: 6px 10px; border: 1px solid var(--border);
-  }
-  .overview-content ul { padding-left: 1.2rem; margin: 0.3rem 0; }
-  .overview-content li { margin-bottom: 0.3rem; }
-  .overview-content .keyword {
-    display: inline-block; font-family: 'Noto Serif KR', serif;
-    font-size: 13px; padding: 2px 8px; background: var(--bg);
-    border: 1px solid var(--border); border-radius: 4px; margin: 2px;
+  @media (max-width:700px) {
+    .sidebar { display:none; }
+    .chapter-select-wrap { display:block; }
+    .layout { display:block; }
+    .main { padding:1.2rem 1rem; }
+    .chapter-title { font-size:20px; }
+    .original-text { font-size:15px; }
   }
 </style>
 </head>
@@ -254,324 +139,327 @@
 
 <header>
   <div class="header-inner">
-    <div class="logo-row">
+    <div>
       <div class="logo">金剛經</div>
-      <a href="../" class="home-link">← 고전 목록</a>
+      <div class="logo-sub">금강반야바라밀경 · 32분</div>
     </div>
-    <div class="logo-sub">금강반야바라밀경 전문 검색 · 鳩摩羅什 漢譯</div>
-    <div class="search-wrap">
-      <input class="search-input" id="searchInput" type="text" placeholder="한자, 분 제목, 직역, 해석으로 검색..." autofocus>
-      <button class="filter-btn active" data-filter="all">전체</button>
-      <button class="filter-btn" data-filter="fav">즐겨찾기</button>
-      <button class="filter-btn" data-filter="written">작성완료</button>
-    </div>
-    <div class="stats" id="stats">전체 <span>32</span>분</div>
+    <input class="search-input" id="searchInput" type="text" placeholder="한자, 분 제목, 번역으로 검색...">
+    <a href="../" class="home-link">← 고전 목록</a>
   </div>
 </header>
 
-<div class="overview">
-  <button class="overview-toggle" onclick="this.classList.toggle('open')">
-    금강경 개요 · 金剛般若波羅蜜經
-    <span class="arrow">▼</span>
-  </button>
-  <div class="overview-body">
-    <div class="overview-content">
-      <h3>개요</h3>
-      <table>
-        <tr><th>정식 명칭</th><td>금강반야바라밀경 (金剛般若波羅蜜經)</td></tr>
-        <tr><th>뜻</th><td>금강(다이아몬드)처럼 단단한 지혜(반야)로 피안(바라밀)에 이르는 경전</td></tr>
-        <tr><th>원어</th><td>Vajracchedikā Prajñāpāramitā Sūtra (산스크리트어)</td></tr>
-        <tr><th>한역</th><td>구마라집(鳩摩羅什, 344~413)이 402년에 번역한 판본이 가장 널리 읽힘</td></tr>
-        <tr><th>분량</th><td>32분(장), 약 5,000자</td></tr>
-      </table>
+<div class="chapter-select-wrap">
+  <select class="chapter-select" id="chapterSelect" onchange="selectById(this.value)"></select>
+</div>
 
-      <h3>핵심 사상</h3>
-      <ul>
-        <li><strong>공(空)</strong> — 모든 것에는 고정된 실체가 없다</li>
-        <li><strong>무상(無相)</strong> — 형상에 집착하지 말라. <span class="keyword">凡所有相 皆是虛妄</span> 무릇 형상이 있는 것은 모두 허망하다</li>
-        <li><strong>무주(無住)</strong> — 어디에도 머물지 않는 마음. <span class="keyword">應無所住而生其心</span> 마땅히 머무는 바 없이 마음을 내라</li>
-        <li><strong>비유</strong> — <span class="keyword">如夢幻泡影 如露亦如電</span> 꿈, 환상, 물거품, 그림자, 이슬, 번개와 같다</li>
-      </ul>
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main" id="main"></main>
+</div>
 
-      <h3>구조</h3>
-      <table>
-        <tr><th>제1~5분</th><td>도입 — 수보리가 부처에게 질문</td></tr>
-        <tr><th>제6~16분</th><td>전반부 — 공의 지혜, 집착 없는 보시</td></tr>
-        <tr><th>제17~32분</th><td>후반부 — 같은 질문 반복, 더 깊은 차원의 답변</td></tr>
-      </table>
-
-      <h3>등장인물</h3>
-      <table>
-        <tr><th>부처</th><td>佛 · 世尊 · 如來 — 석가모니, 설법하는 주체</td></tr>
-        <tr><th>수보리</th><td>須菩提 — 부처의 제자, 질문자. 해공제일(解空第一), 공을 가장 잘 이해한 제자</td></tr>
-      </table>
-
-      <h3>자주 나오는 핵심 표현</h3>
-      <table>
-        <tr><th>阿耨多羅三藐三菩提</th><td>최상의 깨달음 (아뇩다라삼먁삼보리)</td></tr>
-        <tr><th>般若波羅蜜</th><td>지혜의 완성 (반야바라밀)</td></tr>
-        <tr><th>即非~是名~</th><td>"~이 곧 ~이 아니니, 이를 ~이라 이름한다" — 금강경의 대표적 논법</td></tr>
-        <tr><th>四句偈</th><td>네 구절의 게송. 경전의 핵심을 함축</td></tr>
-      </table>
-
-      <h3>번역 작업 참고사항</h3>
-      <ul>
-        <li><strong>음역어</strong>가 많음 — 아뇩다라삼먁삼보리, 수보리, 수다원, 사다함, 아나함, 아라한 등은 번역하지 않고 음을 그대로 씀</li>
-        <li><strong>반복 구조</strong> — "A를 A가 아니라 하니, 이를 A라 이름한다" 패턴이 경전 전체에 반복됨</li>
-        <li>같은 한자가 문맥에 따라 다른 뜻으로 쓰일 수 있음 (예: 說 — 설법하다/기뻐하다)</li>
-      </ul>
-    </div>
+<!-- 한자 모달 -->
+<div class="hanja-modal-overlay" id="hanjaOverlay">
+  <div class="hanja-modal">
+    <button class="hanja-modal-close" onclick="closeHanjaModal()">&times;</button>
+    <div class="hm-char" id="hmChar"></div>
+    <div class="hm-mean" id="hmMean"></div>
+    <div class="hm-read" id="hmRead"></div>
   </div>
 </div>
 
-<main id="results"></main>
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modal"></div>
-</div>
-
-<div class="toast" id="toast"></div>
-
 <script src="data.js"></script>
 <script>
-const LS_PREFIX = 'gge_';
-const written = JSON.parse(localStorage.getItem(LS_PREFIX+'written')||'{}');
-const memos = JSON.parse(localStorage.getItem(LS_PREFIX+'memos')||'{}');
-const favs = JSON.parse(localStorage.getItem(LS_PREFIX+'favs')||'{}');
+const HANJA_DICT = {
+  '如':{m:'같을',r:'여'},'是':{m:'이',r:'시'},'我':{m:'나',r:'아'},'聞':{m:'들을',r:'문'},
+  '一':{m:'한',r:'일'},'時':{m:'때',r:'시'},'佛':{m:'부처',r:'불'},'在':{m:'있을',r:'재'},
+  '舍':{m:'집',r:'사'},'衞':{m:'지킬',r:'위'},'國':{m:'나라',r:'국'},'祇':{m:'공경',r:'기'},
+  '樹':{m:'나무',r:'수'},'給':{m:'줄',r:'급'},'孤':{m:'외로울',r:'고'},'獨':{m:'홀로',r:'독'},
+  '園':{m:'동산',r:'원'},'與':{m:'더불어',r:'여'},'大':{m:'클',r:'대'},'比':{m:'견줄',r:'비'},
+  '丘':{m:'언덕',r:'구'},'衆':{m:'무리',r:'중'},'千':{m:'일천',r:'천'},'二':{m:'두',r:'이'},
+  '百':{m:'일백',r:'백'},'五':{m:'다섯',r:'오'},'十':{m:'열',r:'십'},'人':{m:'사람',r:'인'},
+  '爾':{m:'너',r:'이'},'時':{m:'때',r:'시'},'世':{m:'세상',r:'세'},'尊':{m:'높을',r:'존'},
+  '食':{m:'먹을',r:'식'},'時':{m:'때',r:'시'},'著':{m:'입을',r:'착'},'衣':{m:'옷',r:'의'},
+  '持':{m:'가질',r:'지'},'缽':{m:'바리',r:'발'},'入':{m:'들',r:'입'},'城':{m:'성',r:'성'},
+  '乞':{m:'빌',r:'걸'},'食':{m:'먹을',r:'식'},'於':{m:'어조사',r:'어'},'其':{m:'그',r:'기'},
+  '中':{m:'가운데',r:'중'},'次':{m:'차례',r:'차'},'第':{m:'차례',r:'제'},'還':{m:'돌아올',r:'환'},
+  '至':{m:'이를',r:'지'},'本':{m:'근본',r:'본'},'處':{m:'곳',r:'처'},'飯':{m:'밥',r:'반'},
+  '訖':{m:'마칠',r:'흘'},'收':{m:'거둘',r:'수'},'敷':{m:'펼',r:'부'},'座':{m:'자리',r:'좌'},
+  '而':{m:'말이을',r:'이'},'坐':{m:'앉을',r:'좌'},'長':{m:'어른',r:'장'},'老':{m:'늙을',r:'로'},
+  '須':{m:'모름지기',r:'수'},'菩':{m:'보리',r:'보'},'提':{m:'들',r:'제'},'即':{m:'곧',r:'즉'},
+  '從':{m:'따를',r:'종'},'起':{m:'일어날',r:'기'},'偏':{m:'치우칠',r:'편'},'袒':{m:'벗을',r:'단'},
+  '右':{m:'오른',r:'우'},'肩':{m:'어깨',r:'견'},'膝':{m:'무릎',r:'슬'},'著':{m:'닿을',r:'착'},
+  '地':{m:'땅',r:'지'},'合':{m:'합할',r:'합'},'掌':{m:'손바닥',r:'장'},'恭':{m:'공손',r:'공'},
+  '敬':{m:'공경',r:'경'},'白':{m:'아뢸',r:'백'},'言':{m:'말씀',r:'언'},'希':{m:'드물',r:'희'},
+  '有':{m:'있을',r:'유'},'善':{m:'착할',r:'선'},'哉':{m:'어조사',r:'재'},'護':{m:'지킬',r:'호'},
+  '念':{m:'생각',r:'념'},'諸':{m:'모든',r:'제'},'菩':{m:'보리',r:'보'},'薩':{m:'보살',r:'살'},
+  '付':{m:'부칠',r:'부'},'囑':{m:'부탁',r:'촉'},'發':{m:'필',r:'발'},'阿':{m:'언덕',r:'아'},
+  '耨':{m:'김맬',r:'누'},'多':{m:'많을',r:'다'},'羅':{m:'그물',r:'나'},'三':{m:'셋',r:'삼'},
+  '藐':{m:'멀',r:'막'},'菩':{m:'보리',r:'보'},'提':{m:'들',r:'제'},'心':{m:'마음',r:'심'},
+  '云':{m:'이를',r:'운'},'何':{m:'어찌',r:'하'},'應':{m:'응할',r:'응'},'住':{m:'머물',r:'주'},
+  '降':{m:'항복',r:'항'},'伏':{m:'엎드릴',r:'복'},'其':{m:'그',r:'기'},'善':{m:'착할',r:'선'},
+  '男':{m:'사내',r:'남'},'子':{m:'아들',r:'자'},'女':{m:'여자',r:'여'},'人':{m:'사람',r:'인'},
+  '欲':{m:'하고자',r:'욕'},'行':{m:'행할',r:'행'},'無':{m:'없을',r:'무'},'上':{m:'위',r:'상'},
+  '正':{m:'바를',r:'정'},'等':{m:'같을',r:'등'},'覺':{m:'깨달을',r:'각'},'我':{m:'나',r:'아'},
+  '皆':{m:'다',r:'개'},'令':{m:'하여금',r:'령'},'得':{m:'얻을',r:'득'},'滅':{m:'멸할',r:'멸'},
+  '度':{m:'건널',r:'도'},'若':{m:'같을',r:'약'},'卵':{m:'알',r:'란'},'生':{m:'날',r:'생'},
+  '胎':{m:'태',r:'태'},'濕':{m:'습할',r:'습'},'化':{m:'될',r:'화'},'色':{m:'빛',r:'색'},
+  '無':{m:'없을',r:'무'},'色':{m:'빛',r:'색'},'想':{m:'생각',r:'상'},'想':{m:'생각',r:'상'},
+  '非':{m:'아닐',r:'비'},'有':{m:'있을',r:'유'},'想':{m:'생각',r:'상'},'非':{m:'아닐',r:'비'},
+  '無':{m:'없을',r:'무'},'想':{m:'생각',r:'상'},'界':{m:'경계',r:'계'},'入':{m:'들',r:'입'},
+  '涅':{m:'진흙',r:'열'},'槃':{m:'반',r:'반'},'而':{m:'말이을',r:'이'},'無':{m:'없을',r:'무'},
+  '餘':{m:'남을',r:'여'},'實':{m:'열매',r:'실'},'無':{m:'없을',r:'무'},'衆':{m:'무리',r:'중'},
+  '生':{m:'날',r:'생'},'此':{m:'이',r:'차'},'語':{m:'말씀',r:'어'},'者':{m:'놈',r:'자'},
+  '何':{m:'어찌',r:'하'},'以':{m:'써',r:'이'},'故':{m:'까닭',r:'고'},'須':{m:'모름지기',r:'수'},
+  '菩':{m:'보리',r:'보'},'提':{m:'들',r:'제'},'若':{m:'만약',r:'약'},'見':{m:'볼',r:'견'},
+  '我':{m:'나',r:'아'},'相':{m:'서로',r:'상'},'人':{m:'사람',r:'인'},'相':{m:'서로',r:'상'},
+  '衆':{m:'무리',r:'중'},'生':{m:'날',r:'생'},'相':{m:'서로',r:'상'},'壽':{m:'목숨',r:'수'},
+  '者':{m:'놈',r:'자'},'則':{m:'곧',r:'즉'},'非':{m:'아닐',r:'비'},'真':{m:'참',r:'진'},
+  '凡':{m:'무릇',r:'범'},'所':{m:'바',r:'소'},'有':{m:'있을',r:'유'},'皆':{m:'다',r:'개'},
+  '虛':{m:'빌',r:'허'},'妄':{m:'망령',r:'망'},'以':{m:'써',r:'이'},'見':{m:'볼',r:'견'},
+  '如':{m:'같을',r:'여'},'來':{m:'올',r:'래'},'不':{m:'아닐',r:'불'},'可':{m:'옳을',r:'가'},
+  '以':{m:'써',r:'이'},'身':{m:'몸',r:'신'},'相':{m:'서로',r:'상'},'得':{m:'얻을',r:'득'},
+  '見':{m:'볼',r:'견'},'知':{m:'알',r:'지'},'是':{m:'이',r:'시'},'說':{m:'말씀',r:'설'},
+  '深':{m:'깊을',r:'심'},'解':{m:'풀',r:'해'},'義':{m:'옳을',r:'의'},'趣':{m:'뜻',r:'취'},
+  '涕':{m:'눈물',r:'체'},'淚':{m:'눈물',r:'루'},'悲':{m:'슬플',r:'비'},'泣':{m:'울',r:'읍'},
+  '前':{m:'앞',r:'전'},'世':{m:'세상',r:'세'},'界':{m:'경계',r:'계'},'微':{m:'작을',r:'미'},
+  '塵':{m:'티끌',r:'진'},'是':{m:'이',r:'시'},'名':{m:'이름',r:'명'},'字':{m:'글자',r:'자'},
+  '般':{m:'반',r:'반'},'若':{m:'지혜',r:'야'},'波':{m:'물결',r:'파'},'羅':{m:'그물',r:'나'},
+  '蜜':{m:'꿀',r:'밀'},'多':{m:'많을',r:'다'},'金':{m:'쇠',r:'금'},'剛':{m:'굳셀',r:'강'},
+  '法':{m:'법',r:'법'},'會':{m:'모임',r:'회'},'因':{m:'인할',r:'인'},'由':{m:'말미암을',r:'유'},
+  '分':{m:'나눌',r:'분'},'善':{m:'착할',r:'선'},'現':{m:'나타날',r:'현'},'請':{m:'청할',r:'청'},
+  '大':{m:'클',r:'대'},'乘':{m:'탈',r:'승'},'正':{m:'바를',r:'정'},'宗':{m:'마루',r:'종'},
+  '妙':{m:'묘할',r:'묘'},'行':{m:'행할',r:'행'},'無':{m:'없을',r:'무'},'住':{m:'머물',r:'주'},
+  '如':{m:'같을',r:'여'},'理':{m:'다스릴',r:'이'},'實':{m:'열매',r:'실'},'見':{m:'볼',r:'견'},
+  '正':{m:'바를',r:'정'},'信':{m:'믿을',r:'신'},'希':{m:'드물',r:'희'},'有':{m:'있을',r:'유'},
+  '尊':{m:'높을',r:'존'},'重':{m:'무거울',r:'중'},'持':{m:'가질',r:'지'},'依':{m:'의지',r:'의'},
+  '法':{m:'법',r:'법'},'出':{m:'날',r:'출'},'生':{m:'날',r:'생'},'無':{m:'없을',r:'무'},
+  '爲':{m:'할',r:'위'},'福':{m:'복',r:'복'},'勝':{m:'이길',r:'승'},'持':{m:'가질',r:'지'},
+  '尊':{m:'높을',r:'존'},'重':{m:'무거울',r:'중'},'正':{m:'바를',r:'정'},'敎':{m:'가르칠',r:'교'},
+  '能':{m:'능할',r:'능'},'淨':{m:'깨끗',r:'정'},'業':{m:'업',r:'업'},'障':{m:'막을',r:'장'},
+  '究':{m:'궁구할',r:'구'},'竟':{m:'마칠',r:'경'},'無':{m:'없을',r:'무'},'我':{m:'나',r:'아'},
+  '威':{m:'위엄',r:'위'},'儀':{m:'거동',r:'의'},'寂':{m:'고요',r:'적'},'靜':{m:'고요',r:'정'},
+  '一':{m:'한',r:'일'},'體':{m:'몸',r:'체'},'同':{m:'같을',r:'동'},'觀':{m:'볼',r:'관'},
+  '化':{m:'될',r:'화'},'無':{m:'없을',r:'무'},'所':{m:'바',r:'소'},'化':{m:'될',r:'화'},
+  '法':{m:'법',r:'법'},'界':{m:'경계',r:'계'},'通':{m:'통할',r:'통'},'化':{m:'될',r:'화'},
+  '知':{m:'알',r:'지'},'見':{m:'볼',r:'견'},'不':{m:'아닐',r:'불'},'生':{m:'날',r:'생'},
+  '信':{m:'믿을',r:'신'},'心':{m:'마음',r:'심'},'清':{m:'맑을',r:'청'},'淨':{m:'깨끗',r:'정'},
+  '前':{m:'앞',r:'전'},'後':{m:'뒤',r:'후'},'際':{m:'즈음',r:'제'},'斷':{m:'끊을',r:'단'},
+  '離':{m:'떠날',r:'이'},'色':{m:'빛',r:'색'},'離':{m:'떠날',r:'이'},'相':{m:'서로',r:'상'},
+  '布':{m:'펼',r:'포'},'施':{m:'베풀',r:'시'},'功':{m:'공',r:'공'},'德':{m:'덕',r:'덕'},
+  '受':{m:'받을',r:'수'},'持':{m:'가질',r:'지'},'正':{m:'바를',r:'정'},'修':{m:'닦을',r:'수'},
+  '無':{m:'없을',r:'무'},'住':{m:'머물',r:'주'},'生':{m:'날',r:'생'},'心':{m:'마음',r:'심'},
+  '空':{m:'빌',r:'공'},'理':{m:'다스릴',r:'이'},'般':{m:'반',r:'반'},'若':{m:'지혜',r:'야'},
+  '應':{m:'응할',r:'응'},'化':{m:'될',r:'화'},'非':{m:'아닐',r:'비'},'真':{m:'참',r:'진'},
+  '功':{m:'공',r:'공'},'德':{m:'덕',r:'덕'},'施':{m:'베풀',r:'시'},'福':{m:'복',r:'복'},
+  '之':{m:'갈',r:'지'},'比':{m:'견줄',r:'비'},'無':{m:'없을',r:'무'},'爲':{m:'할',r:'위'},
+  '勝':{m:'이길',r:'승'},'福':{m:'복',r:'복'},'具':{m:'갖출',r:'구'},'足':{m:'발',r:'족'},
+  '彼':{m:'저',r:'피'},'此':{m:'이',r:'차'},'寂':{m:'고요',r:'적'},'滅':{m:'멸할',r:'멸'},
+  '亦':{m:'또',r:'역'},'無':{m:'없을',r:'무'},'得':{m:'얻을',r:'득'},'失':{m:'잃을',r:'실'},
+  '隨':{m:'따를',r:'수'},'喜':{m:'기쁠',r:'희'},'緣':{m:'인연',r:'연'},'起':{m:'일어날',r:'기'},
+  '功':{m:'공',r:'공'},'效':{m:'본받을',r:'효'},'離':{m:'떠날',r:'이'},'幻':{m:'환상',r:'환'},
+  '本':{m:'근본',r:'본'},'眞':{m:'참',r:'진'},'際':{m:'즈음',r:'제'},'無':{m:'없을',r:'무'},
+  '滅':{m:'멸할',r:'멸'},'那':{m:'어찌',r:'나'},'伽':{m:'강가',r:'가'},'恒':{m:'항상',r:'항'},
+  '河':{m:'강',r:'하'},'沙':{m:'모래',r:'사'},'數':{m:'셈',r:'수'},'寶':{m:'보배',r:'보'},
+  '布':{m:'펼',r:'포'},'施':{m:'베풀',r:'시'},'億':{m:'억',r:'억'},'那':{m:'어찌',r:'나'},
+  '由':{m:'말미암을',r:'유'},'他':{m:'다를',r:'타'},'問':{m:'물을',r:'문'},'答':{m:'대답',r:'답'},
+  '以':{m:'써',r:'이'},'無':{m:'없을',r:'무'},'我':{m:'나',r:'아'},'觀':{m:'볼',r:'관'},
+  '歡':{m:'기쁠',r:'환'},'喜':{m:'기쁠',r:'희'},'奉':{m:'받들',r:'봉'},'行':{m:'행할',r:'행'},
+  '作':{m:'지을',r:'작'},'禮':{m:'예도',r:'예'},'而':{m:'말이을',r:'이'},'去':{m:'갈',r:'거'},
+  '持':{m:'가질',r:'지'},'戒':{m:'경계할',r:'계'},'修':{m:'닦을',r:'수'},'福':{m:'복',r:'복'},
+  '爲':{m:'할',r:'위'},'他':{m:'다를',r:'타'},'說':{m:'말씀',r:'설'},'經':{m:'지날',r:'경'},
+  '勝':{m:'이길',r:'승'},'福':{m:'복',r:'복'},'莊':{m:'씩씩할',r:'장'},'嚴':{m:'엄할',r:'엄'},
+  '淨':{m:'깨끗',r:'정'},'土':{m:'흙',r:'토'},'通':{m:'통할',r:'통'},'達':{m:'통할',r:'달'},
+  '無':{m:'없을',r:'무'},'礙':{m:'거리낄',r:'애'},'勸':{m:'권할',r:'권'},'化':{m:'될',r:'화'},
+  '有':{m:'있을',r:'유'},'情':{m:'뜻',r:'정'},'夢':{m:'꿈',r:'몽'},'幻':{m:'환상',r:'환'},
+  '泡':{m:'거품',r:'포'},'影':{m:'그림자',r:'영'},'露':{m:'이슬',r:'로'},'電':{m:'번개',r:'전'},
+  '觀':{m:'볼',r:'관'},'應':{m:'응할',r:'응'},'作':{m:'지을',r:'작'},'如':{m:'같을',r:'여'},
+  '是':{m:'이',r:'시'},'觀':{m:'볼',r:'관'},'信':{m:'믿을',r:'신'},'解':{m:'풀',r:'해'},
+  '受':{m:'받을',r:'수'},'持':{m:'가질',r:'지'},'分':{m:'나눌',r:'분'},'讀':{m:'읽을',r:'독'},
+  '誦':{m:'외울',r:'송'},'爲':{m:'할',r:'위'},'人':{m:'사람',r:'인'},'演':{m:'넓을',r:'연'},
+  '說':{m:'말씀',r:'설'},'須':{m:'모름지기',r:'수'},'陀':{m:'건널',r:'타'},'洹':{m:'강이름',r:'원'},
+  '斯':{m:'이',r:'사'},'含':{m:'머금을',r:'함'},'那':{m:'어찌',r:'나'},'漢':{m:'한수',r:'한'},
+  '羅':{m:'그물',r:'나'},'漢':{m:'한수',r:'한'},'弗':{m:'아닐',r:'불'},'舍':{m:'집',r:'사'},
+  '利':{m:'이로울',r:'이'},'子':{m:'아들',r:'자'},'目':{m:'눈',r:'목'},'連':{m:'이을',r:'련'},
+  '迦':{m:'막을',r:'가'},'葉':{m:'잎',r:'섭'},'摩':{m:'갈',r:'마'},'訶':{m:'클',r:'하'},
+  '迦':{m:'막을',r:'가'},'旃':{m:'깃발',r:'전'},'延':{m:'늘일',r:'연'},'阿':{m:'언덕',r:'아'},
+  '難':{m:'어려울',r:'난'},'陀':{m:'건널',r:'타'},'優':{m:'넉넉',r:'우'},'波':{m:'물결',r:'파'},
+  '離':{m:'떠날',r:'이'},'富':{m:'부자',r:'부'},'樓':{m:'다락',r:'루'},'那':{m:'어찌',r:'나'},
+  '迦':{m:'막을',r:'가'},'留':{m:'머무를',r:'류'},'陀':{m:'건널',r:'타'},'夷':{m:'오랑캐',r:'이'},
+  '提':{m:'들',r:'제'},'婆':{m:'할미',r:'파'},'達':{m:'통할',r:'달'},'多':{m:'많을',r:'다'},
+  '劫':{m:'겁',r:'겁'},'眼':{m:'눈',r:'안'},'耳':{m:'귀',r:'이'},'鼻':{m:'코',r:'비'},
+  '舌':{m:'혀',r:'설'},'身':{m:'몸',r:'신'},'意':{m:'뜻',r:'의'},'香':{m:'향기',r:'향'},
+  '味':{m:'맛',r:'미'},'觸':{m:'닿을',r:'촉'},'識':{m:'알',r:'식'},'觸':{m:'닿을',r:'촉'},
+  '受':{m:'받을',r:'수'},'想':{m:'생각',r:'상'},'行':{m:'행할',r:'행'},'識':{m:'알',r:'식'},
+  '淨':{m:'깨끗',r:'정'},'慧':{m:'슬기',r:'혜'},'智':{m:'지혜',r:'지'},'慧':{m:'슬기',r:'혜'},
+  '忍':{m:'참을',r:'인'},'辱':{m:'욕될',r:'욕'},'波':{m:'물결',r:'파'},'羅':{m:'그물',r:'나'},
+  '蜜':{m:'꿀',r:'밀'},'多':{m:'많을',r:'다'},'精':{m:'정밀',r:'정'},'進':{m:'나아갈',r:'진'},
+  '禪':{m:'고요',r:'선'},'定':{m:'정할',r:'정'},'智':{m:'지혜',r:'지'},'慧':{m:'슬기',r:'혜'},
+  '方':{m:'모',r:'방'},'便':{m:'편할',r:'편'},'願':{m:'원할',r:'원'},'力':{m:'힘',r:'력'},
+  '智':{m:'지혜',r:'지'},'力':{m:'힘',r:'력'},'慈':{m:'사랑',r:'자'},'悲':{m:'슬플',r:'비'},
+  '喜':{m:'기쁠',r:'희'},'捨':{m:'버릴',r:'사'},'皆':{m:'다',r:'개'},'悉':{m:'다',r:'실'},
+  '歸':{m:'돌아갈',r:'귀'},'命':{m:'목숨',r:'명'},'頂':{m:'정수리',r:'정'},'禮':{m:'예도',r:'예'},
+  '恭':{m:'공손',r:'공'},'敬':{m:'공경',r:'경'},'供':{m:'이바지',r:'공'},'養':{m:'기를',r:'양'},
+  '作':{m:'지을',r:'작'},'是':{m:'이',r:'시'},'念':{m:'생각',r:'념'},'天':{m:'하늘',r:'천'},
+  '龍':{m:'용',r:'용'},'夜':{m:'밤',r:'야'},'叉':{m:'창',r:'차'},'乾':{m:'마를',r:'건'},
+  '闥':{m:'문',r:'달'},'婆':{m:'할미',r:'파'},'阿':{m:'언덕',r:'아'},'修':{m:'닦을',r:'수'},
+  '羅':{m:'그물',r:'나'},'迦':{m:'막을',r:'가'},'樓':{m:'다락',r:'루'},'羅':{m:'그물',r:'나'},
+  '緊':{m:'굳을',r:'긴'},'那':{m:'어찌',r:'나'},'羅':{m:'그물',r:'나'},'摩':{m:'갈',r:'마'},
+  '睺':{m:'별이름',r:'후'},'羅':{m:'그물',r:'나'},'伽':{m:'강가',r:'가'},'人':{m:'사람',r:'인'},
+  '非':{m:'아닐',r:'비'},'人':{m:'사람',r:'인'},'等':{m:'같을',r:'등'},'聞':{m:'들을',r:'문'},
+  '皆':{m:'다',r:'개'},'大':{m:'클',r:'대'},'歡':{m:'기쁠',r:'환'},'喜':{m:'기쁠',r:'희'},
+  '信':{m:'믿을',r:'신'},'受':{m:'받을',r:'수'},'奉':{m:'받들',r:'봉'},'行':{m:'행할',r:'행'},
+};
 
-let filter='all', query='';
+let currentId = null;
+let searchMode = false;
+let searchQuery = '';
 
-function hl(text, q){
-  if(!q) return text;
-  const re = new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','g');
-  return text.replace(re,'<mark>$1</mark>');
+function rubyText(text) {
+  if (!text) return '';
+  return text.split('').map(ch => {
+    if (/[一-鿿㐀-䶿]/.test(ch)) {
+      const info = HANJA_DICT[ch];
+      const rt = info ? info.r : '';
+      return `<ruby data-ch="${ch}" onclick="showHanjaModal('${ch}')">${ch}<rt>${rt}</rt></ruby>`;
+    }
+    if (ch === '\n') return '<br>';
+    return ch;
+  }).join('');
 }
 
-function render(){
-  const q = query.trim();
-  let items = DATA;
-  if(filter==='written') items=items.filter(d=>written[d.id]);
-  else if(filter==='fav') items=items.filter(d=>favs[d.id]);
-  if(q) items=items.filter(d=>
-    d.text.includes(q)||d.id.includes(q)||
-    (d.title&&d.title.includes(q))||
-    (d.titleKo&&d.titleKo.includes(q))||
-    (d.pron&&d.pron.includes(q))||
-    (d.literal&&d.literal.includes(q))||
-    (d.meaning&&d.meaning.includes(q))
+function showHanjaModal(ch) {
+  const info = HANJA_DICT[ch];
+  document.getElementById('hmChar').textContent = ch;
+  document.getElementById('hmMean').textContent = info ? info.m : '';
+  document.getElementById('hmRead').textContent = info ? info.r : '';
+  document.getElementById('hanjaOverlay').classList.add('open');
+}
+
+function closeHanjaModal() {
+  document.getElementById('hanjaOverlay').classList.remove('open');
+}
+
+document.getElementById('hanjaOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('hanjaOverlay')) closeHanjaModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeHanjaModal();
+});
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = DATA.map(d => `
+    <div class="sidebar-item ${d.id === currentId ? 'active' : ''}" onclick="selectById('${d.id}')">
+      <span class="sidebar-num">제${d.num}분</span>
+      <span class="sidebar-title">${d.title}</span>
+    </div>
+  `).join('');
+}
+
+function renderSelect() {
+  const sel = document.getElementById('chapterSelect');
+  sel.innerHTML = DATA.map(d =>
+    `<option value="${d.id}" ${d.id === currentId ? 'selected' : ''}>제${d.num}분 ${d.titleKo} (${d.title})</option>`
+  ).join('');
+}
+
+function selectById(id) {
+  searchMode = false;
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
+  currentId = id;
+  renderSidebar();
+  renderSelect();
+  renderChapter();
+  window.scrollTo(0, 0);
+}
+
+function renderChapter() {
+  const d = DATA.find(x => x.id === currentId);
+  if (!d) return;
+  const idx = DATA.indexOf(d);
+  const prev = DATA[idx - 1];
+  const next = DATA[idx + 1];
+
+  document.getElementById('main').innerHTML = `
+    <div class="chapter-header">
+      <div class="chapter-num">제${d.num}분</div>
+      <div class="chapter-title">${d.title}</div>
+      <div class="chapter-ko">${d.titleKo}</div>
+    </div>
+
+    <div class="section-label">원문 原文</div>
+    <div class="original-text">${rubyText(d.text)}</div>
+
+    <div class="section-label">번역</div>
+    <div class="meaning-box">${(d.meaning || '').replace(/\n/g, '<br>')}</div>
+
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="selectById('${prev ? prev.id : ''}')" ${!prev ? 'disabled' : ''}>
+        ← ${prev ? '제' + prev.num + '분' : ''}
+      </button>
+      <button class="nav-btn" onclick="selectById('${next ? next.id : ''}')" ${!next ? 'disabled' : ''}>
+        ${next ? '제' + next.num + '분' : ''} →
+      </button>
+    </div>
+  `;
+}
+
+function hl(text, q) {
+  if (!q || !text) return text || '';
+  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'g');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+function renderSearch(q) {
+  const items = DATA.filter(d =>
+    d.text.includes(q) || d.title.includes(q) ||
+    (d.titleKo && d.titleKo.includes(q)) ||
+    (d.meaning && d.meaning.includes(q))
   );
 
-  document.getElementById('stats').innerHTML =
-    filter==='all'&&!q ? `전체 <span>32</span>분` :
-    `<span>${items.length}</span>분${q?' — '+q:''}`;
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = items.map(d => `
+    <div class="sidebar-search-item" onclick="selectById('${d.id}')">제${d.num}분 ${d.titleKo}</div>
+  `).join('') || '<div style="padding:1rem;font-size:12px;color:var(--muted);">결과 없음</div>';
 
-  if(!items.length){
-    document.getElementById('results').innerHTML=`<div class="empty"><span class="em">金剛經</span>검색 결과가 없어요.</div>`;
+  if (!items.length) {
+    document.getElementById('main').innerHTML = `<div class="empty"><span class="em">金剛經</span>검색 결과가 없어요.</div>`;
     return;
   }
 
-  document.getElementById('results').innerHTML = items.map(d=>{
-    const preview = d.text.length > 100 ? d.text.substring(0,100)+'…' : d.text;
-    const w = written[d.id];
-    const f = favs[d.id];
-    return `<div class="card" onclick="openModal('${d.id}')" id="card-${d.id}">
-      <div class="card-top">
-        <span class="tag tag-bun">제${d.num}분</span>
-        <span class="bun-title">${hl(d.title,q)}</span>
-        <span class="num">${hl(d.titleKo,q)}</span>
-        ${f?'<span class="fav-badge">★</span>':''}
-        ${w?'<span class="written-badge">✓</span>':''}
+  document.getElementById('main').innerHTML = items.map(d => {
+    const preview = d.text.length > 80 ? d.text.substring(0, 80) + '…' : d.text;
+    return `<div class="search-result-card" onclick="selectById('${d.id}')">
+      <div class="src-top">
+        <span class="src-tag">제${d.num}분</span>
+        <span class="src-title">${hl(d.title, q)}</span>
+        <span class="src-ko">${hl(d.titleKo, q)}</span>
       </div>
-      <div class="hanja"><span class="line">${hl(preview,q)}</span></div>
+      <div class="src-preview">${hl(preview, q)}</div>
     </div>`;
   }).join('');
 }
 
-function openModal(id){
-  const d = DATA.find(x=>x.id===id);
-  if(!d) return;
-
-  function textWithPron(text, pron){
-    if(!pron) return text.split('\n').map(l=>'<span style="display:block">'+l+'</span>').join('');
-    const prArr = pron.match(/./gu)||[];
-    let pi = 0;
-    return text.split('\n').map(line=>{
-      let out = '';
-      for(const ch of line){
-        if(/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(ch)){
-          out += `<ruby>${ch}<rt>${prArr[pi]||''}</rt></ruby>`;
-          pi++;
-        } else {
-          out += ch;
-        }
-      }
-      return '<span style="display:block">'+out+'</span>';
-    }).join('');
-  }
-
-  const BASE_DICT = {
-    '一':{mean:'한',read:'일'},'不':{mean:'아닐',read:'불'},'中':{mean:'가운데',read:'중'},
-    '之':{mean:'갈',read:'지'},'乎':{mean:'어조사',read:'호'},'也':{mean:'어조사',read:'야'},
-    '了':{mean:'마칠',read:'료'},'事':{mean:'일',read:'사'},'于':{mean:'어조사',read:'우'},
-    '人':{mean:'사람',read:'인'},'以':{mean:'써',read:'이'},'何':{mean:'어찌',read:'하'},
-    '便':{mean:'편할',read:'편'},'個':{mean:'낱',read:'개'},'其':{mean:'그',read:'기'},
-    '在':{mean:'있을',read:'재'},'外':{mean:'바깥',read:'외'},'得':{mean:'얻을',read:'득'},
-    '心':{mean:'마음',read:'심'},'於':{mean:'어조사',read:'어'},'是':{mean:'이',read:'시'},
-    '有':{mean:'있을',read:'유'},'段':{mean:'구분',read:'단'},'游':{mean:'놀',read:'유'},
-    '無':{mean:'없을',read:'무'},'爲':{mean:'할',read:'위'},'的':{mean:'과녁',read:'적'},
-    '矣':{mean:'어조사',read:'의'},'者':{mean:'놈',read:'자'},'而':{mean:'말이을',read:'이'},
-    '自':{mean:'스스로',read:'자'},'處':{mean:'곳',read:'처'},'裁':{mean:'마를',read:'재'}
-  };
-
-  function annoToCards(anno, text){
-    if(!anno || !text) return '';
-    const dict = Object.assign({}, BASE_DICT);
-    const re = /(\S)\(([^)]+)\)/g;
-    let m;
-    while((m=re.exec(anno))!==null){
-      const parts = m[2].split(' ');
-      const read = parts[parts.length-1];
-      const mean = parts.slice(0,-1).join(' ');
-      dict[m[1]] = {mean, read};
-    }
-    return text.split('\n').map((line,i)=>{
-      let cards = '';
-      for(const ch of line){
-        if(/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(ch)){
-          const info = dict[ch];
-          if(info){
-            cards += `<div class="anno-card"><span class="ac-hanja">${ch}</span><span class="ac-mean">${info.mean}</span><span class="ac-read">${info.read}</span></div>`;
-          } else {
-            cards += `<div class="anno-card"><span class="ac-hanja">${ch}</span><span class="ac-mean">&nbsp;</span><span class="ac-read">&nbsp;</span></div>`;
-          }
-        } else if(/[，。？！、；：「」]/.test(ch)){
-          cards += `<span class="anno-punct">${ch}</span>`;
-        }
-      }
-      return cards + (i < text.split('\n').length-1 ? '<div class="anno-break"></div>' : '');
-    }).join('');
-  }
-
-  // 빈 섹션은 숨김 처리
-  const hasLiteral = d.literal && d.literal.trim();
-  const hasMeaning = d.meaning && d.meaning.trim();
-  const hasAnno = d.anno && d.anno.trim();
-  const hasPron = d.pron && d.pron.trim();
-
-  document.getElementById('modal').innerHTML = `
-    <button class="modal-close" onclick="closeModal()">&times;</button>
-    <div class="modal-header">
-      <span class="tag tag-bun">제${d.num}분</span>
-      <span class="bun-title" style="font-size:18px;">${d.title}</span>
-      <span class="num">${d.titleKo}</span>
-    </div>
-
-    <div class="modal-section">
-      <div class="modal-section-title">원문 原文</div>
-      <div class="modal-section-body hanja-text ${hasPron?'hanja-ruby':''}">${textWithPron(d.text, d.pron)}</div>
-    </div>
-
-    ${hasLiteral ? `<div class="modal-section">
-      <div class="modal-section-title">직역 直譯</div>
-      <div class="modal-section-body">${d.literal.replace(/\n/g,'<br>')}</div>
-    </div>` : ''}
-
-    ${hasMeaning ? `<div class="modal-section">
-      <div class="modal-section-title">해석 解釋</div>
-      <div class="modal-section-body">${d.meaning}</div>
-    </div>` : ''}
-
-    ${hasAnno ? `<div class="modal-section">
-      <div class="modal-section-title">한자 풀이 漢字</div>
-      <div class="anno-grid">${annoToCards(d.anno, d.text)}</div>
-    </div>` : ''}
-
-    <div class="modal-section">
-      <div class="modal-section-title">메모</div>
-      <textarea class="modal-memo" placeholder="이 분에 대한 나만의 메모..." onchange="saveMemo('${d.id}',this.value)">${memos[d.id]||''}</textarea>
-    </div>
-
-    <div class="modal-actions">
-      <button class="modal-btn ${favs[d.id]?'active':''}" onclick="toggleFav('${d.id}')">
-        ${favs[d.id]?'★ 즐겨찾기 해제':'☆ 즐겨찾기'}
-      </button>
-      <button class="modal-btn" onclick="shareItem('${d.id}')">
-        공유
-      </button>
-      <button class="modal-btn ${written[d.id]?'active':''}" onclick="toggleWritten('${d.id}')">
-        ${written[d.id]?'✓ 작성완료':'작성완료 표시'}
-      </button>
-    </div>
-  `;
-  document.getElementById('modalOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-
-function closeModal(){
-  document.getElementById('modalOverlay').classList.remove('open');
-  document.body.style.overflow='';
-}
-
-document.getElementById('modalOverlay').addEventListener('click',e=>{
-  if(e.target===document.getElementById('modalOverlay')) closeModal();
-});
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape') closeModal();
-});
-
-function saveMemo(id,val){
-  memos[id]=val;
-  localStorage.setItem(LS_PREFIX+'memos',JSON.stringify(memos));
-}
-
-function toggleWritten(id){
-  written[id]=!written[id];
-  localStorage.setItem(LS_PREFIX+'written',JSON.stringify(written));
-  openModal(id);
-  render();
-}
-
-function toggleFav(id){
-  favs[id]=!favs[id];
-  localStorage.setItem(LS_PREFIX+'favs',JSON.stringify(favs));
-  openModal(id);
-  render();
-}
-
-function shareItem(id){
-  const d = DATA.find(x=>x.id===id);
-  if(!d) return;
-  const text = `【금강경 ${d.id} ${d.title} ${d.titleKo}】\n\n${d.text}${d.literal?'\n\n[직역]\n'+d.literal:''}${d.meaning?'\n\n[해석]\n'+d.meaning:''}`;
-  if(navigator.share){
-    navigator.share({title:'금강경 '+d.id, text}).catch(()=>{});
+document.getElementById('searchInput').addEventListener('input', e => {
+  const q = e.target.value.trim();
+  if (!q) {
+    searchMode = false;
+    renderSidebar();
+    renderChapter();
   } else {
-    navigator.clipboard.writeText(text).then(()=>showToast('클립보드에 복사되었습니다'));
+    searchMode = true;
+    searchQuery = q;
+    renderSearch(q);
   }
-}
-
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2000);
-}
-
-document.getElementById('searchInput').addEventListener('input',e=>{
-  query=e.target.value;
-  render();
 });
 
-document.querySelectorAll('.filter-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    filter=btn.dataset.filter;
-    render();
-  });
-});
-
-render();
+// 초기 렌더
+currentId = DATA[0].id;
+renderSidebar();
+renderSelect();
+renderChapter();
 </script>
 </body>
 </html>

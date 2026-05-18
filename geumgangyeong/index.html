@@ -486,7 +486,7 @@ function renderChapter() {
     <div class="meaning-box">${(d.meaning || '').replace(/\n/g, '<br>')}</div>
 
     ${d.commentary ? `
-    <div class="commentary-wrap" id="commentary-${d.id}">
+    <div class="commentary-wrap open" id="commentary-${d.id}">
       <button class="commentary-toggle" onclick="toggleCommentary('${d.id}')">
         <span class="ct-label">📖 해설</span>
         <span class="ct-arrow">▼</span>

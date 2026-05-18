@@ -85,9 +85,9 @@
 
   .section-label { font-size:11px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; font-weight:500; }
   .original-text { font-family:'Noto Serif KR',serif; font-size:17px; line-height:2.2; color:var(--text); margin-bottom:2rem; }
-  .original-text ruby { cursor:pointer; }
-  .original-text ruby:hover rt { color:var(--accent); }
-  .original-text ruby rt { font-size:10px; color:var(--muted); ruby-position:under; transition:color 0.15s; }
+  .original-text { cursor:pointer; }
+  .original-text:hover { background:var(--highlight); border-radius:4px; }
+  .original-text ruby rt { font-size:10px; color:var(--muted); ruby-position:under; }
 
   .meaning-box {
     background:var(--surface); border:1px solid var(--border); border-radius:6px;
@@ -103,20 +103,31 @@
   .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
   .nav-btn:disabled { opacity:0.3; cursor:default; }
 
-  /* ===== 한자 클릭 모달 ===== */
+  /* ===== 한자 풀이 모달 ===== */
   .hanja-modal-overlay {
     display:none; position:fixed; top:0; left:0; right:0; bottom:0;
-    background:rgba(0,0,0,0.35); z-index:300; justify-content:center; align-items:center;
+    background:rgba(0,0,0,0.4); z-index:300;
+    justify-content:center; align-items:flex-start;
+    overflow-y:auto; padding:2rem 1rem;
   }
   .hanja-modal-overlay.open { display:flex; }
   .hanja-modal {
-    background:var(--surface); border-radius:10px; padding:1.6rem 2rem;
-    box-shadow:0 8px 40px rgba(0,0,0,0.15); min-width:180px; text-align:center; position:relative;
+    background:var(--surface); border-radius:10px; padding:1.8rem 2rem;
+    box-shadow:0 8px 40px rgba(0,0,0,0.15); max-width:700px; width:100%; position:relative;
   }
-  .hanja-modal-close { position:absolute; top:0.6rem; right:0.8rem; background:none; border:none; font-size:18px; color:var(--muted); cursor:pointer; }
-  .hm-char { font-family:'Noto Serif KR',serif; font-size:52px; color:var(--text); line-height:1.2; }
-  .hm-mean { font-size:16px; color:var(--accent); margin-top:0.4rem; }
-  .hm-read { font-size:14px; color:var(--muted); margin-top:0.2rem; }
+  .hanja-modal-close { position:absolute; top:0.8rem; right:1rem; background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; }
+  .hanja-modal-title { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--accent); margin-bottom:1.2rem; font-weight:500; }
+  .anno-grid { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .anno-card {
+    display:flex; flex-direction:column; align-items:center;
+    min-width:52px; padding:6px 8px;
+    background:var(--bg); border:1px solid var(--border); border-radius:6px;
+  }
+  .anno-card .ac-hanja { font-family:'Noto Serif KR',serif; font-size:20px; font-weight:400; color:var(--text); line-height:1.3; }
+  .anno-card .ac-mean { font-size:12px; color:var(--accent); line-height:1.3; margin-top:2px; }
+  .anno-card .ac-read { font-size:12px; color:var(--muted); line-height:1.3; }
+  .anno-break { width:100%; height:8px; }
+  .anno-punct { font-size:16px; color:var(--muted); align-self:center; padding:0 2px; }
 
   /* ===== 모바일 ===== */
   .chapter-select-wrap { display:none; padding:0.8rem 1rem; background:var(--surface); border-bottom:1px solid var(--border); }
@@ -158,12 +169,11 @@
 </div>
 
 <!-- 한자 모달 -->
-<div class="hanja-modal-overlay" id="hanjaOverlay">
+<div class="hanja-modal-overlay" id="hanjaOverlay" onclick="closeHanjaModal(event)">
   <div class="hanja-modal">
     <button class="hanja-modal-close" onclick="closeHanjaModal()">&times;</button>
-    <div class="hm-char" id="hmChar"></div>
-    <div class="hm-mean" id="hmMean"></div>
-    <div class="hm-read" id="hmRead"></div>
+    <div class="hanja-modal-title" id="hanjaModalTitle"></div>
+    <div id="hanjaGrid"></div>
   </div>
 </div>
 
@@ -314,34 +324,57 @@ let currentId = null;
 let searchMode = false;
 let searchQuery = '';
 
+function isCJK(ch) {
+  return /[一-鿿㐀-䶿]/.test(ch);
+}
+
 function rubyText(text) {
   if (!text) return '';
   return text.split('').map(ch => {
-    if (/[一-鿿㐀-䶿]/.test(ch)) {
+    if (isCJK(ch)) {
       const info = HANJA_DICT[ch];
       const rt = info ? info.r : '';
-      return `<ruby data-ch="${ch}" onclick="showHanjaModal('${ch}')">${ch}<rt>${rt}</rt></ruby>`;
+      return `<ruby>${ch}<rt>${rt}</rt></ruby>`;
     }
     if (ch === '\n') return '<br>';
     return ch;
   }).join('');
 }
 
-function showHanjaModal(ch) {
-  const info = HANJA_DICT[ch];
-  document.getElementById('hmChar').textContent = ch;
-  document.getElementById('hmMean').textContent = info ? info.m : '';
-  document.getElementById('hmRead').textContent = info ? info.r : '';
+function showHanjaModal(id, title) {
+  const d = DATA.find(x => x.id === id);
+  if (!d) return;
+  const lines = d.text.split('\n');
+  let html = '';
+  lines.forEach((line, i) => {
+    html += '<div class="anno-grid">';
+    for (const ch of line) {
+      if (isCJK(ch)) {
+        const info = HANJA_DICT[ch];
+        if (info) {
+          html += `<div class="anno-card"><span class="ac-hanja">${ch}</span><span class="ac-mean">${info.m}</span><span class="ac-read">${info.r}</span></div>`;
+        } else {
+          html += `<div class="anno-card"><span class="ac-hanja">${ch}</span><span class="ac-mean"> </span><span class="ac-read"> </span></div>`;
+        }
+      } else if (/[，。？！、；：「」]/.test(ch)) {
+        html += `<span class="anno-punct">${ch}</span>`;
+      }
+    }
+    html += '</div>';
+    if (i < lines.length - 1) html += '<div class="anno-break"></div>';
+  });
+  document.getElementById('hanjaModalTitle').textContent = title;
+  document.getElementById('hanjaGrid').innerHTML = html;
   document.getElementById('hanjaOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
-function closeHanjaModal() {
-  document.getElementById('hanjaOverlay').classList.remove('open');
+function closeHanjaModal(e) {
+  if (!e || e.target === document.getElementById('hanjaOverlay') || e.target === e.currentTarget) {
+    document.getElementById('hanjaOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
 }
-
-document.getElementById('hanjaOverlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('hanjaOverlay')) closeHanjaModal();
-});
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeHanjaModal();
@@ -389,8 +422,8 @@ function renderChapter() {
       <div class="chapter-ko">${d.titleKo}</div>
     </div>
 
-    <div class="section-label">원문 原文</div>
-    <div class="original-text">${rubyText(d.text)}</div>
+    <div class="section-label">원문 原文 <span style="font-size:9px;color:var(--muted);font-weight:300;letter-spacing:0">· 클릭하면 한자 풀이</span></div>
+    <div class="original-text" onclick="showHanjaModal('${d.id}', '제${d.num}분 ${d.title} ${d.titleKo}')">${rubyText(d.text)}</div>
 
     <div class="section-label">번역</div>
     <div class="meaning-box">${(d.meaning || '').replace(/\n/g, '<br>')}</div>

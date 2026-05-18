@@ -112,7 +112,14 @@
     font-size: 10px; color: var(--muted); letter-spacing: 2px;
     padding: 0.4rem 1.2rem; font-weight: 500;
     text-transform: uppercase;
+    cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+    user-select: none;
   }
+  .sidebar-type:hover { color: var(--accent); }
+  .sidebar-type-arrow { font-size: 9px; transition: transform 0.2s; }
+  .sidebar-type.collapsed .sidebar-type-arrow { transform: rotate(-90deg); }
+  .sidebar-group { overflow: hidden; transition: max-height 0.25s ease; }
+  .sidebar-group.collapsed { max-height: 0 !important; }
   .si-num { font-size: 11px; color: var(--muted); min-width: 18px; }
   .sidebar-item {
     display: flex; align-items: baseline; gap: 6px;
@@ -968,27 +975,51 @@ function syncChipToCurrentChapter() {
   renderSelectOnly();
 }
 
+const collapsedTypes = new Set();
+
+function toggleSidebarType(type) {
+  if (collapsedTypes.has(type)) collapsedTypes.delete(type);
+  else collapsedTypes.add(type);
+  renderSidebar();
+}
+
 function renderSidebar() {
   const all = getAllChapters();
   const sidebar = document.getElementById('sidebar');
-  let html = '';
-  let prevType = '';
 
+  // 타입별 그룹화
+  const groups = [];
   all.forEach(ch => {
-    if (ch.type !== prevType) {
-      html += `<div class="sidebar-type">${ch.type}</div>`;
-      prevType = ch.type;
-    }
-    const isReady = !!ch.stories;
-    const activeClass = ch.id === currentChapterId ? ' active' : '';
-    const soonClass = !isReady ? ' soon' : '';
-    const onclick = isReady ? `onclick="selectChapterById('${ch.id}')"` : '';
-    html += `<div class="sidebar-item${activeClass}${soonClass}" ${onclick}>
-      <span class="si-num">${ch.number}.</span>
-      <span class="si-hanja">${ch.hanja}</span>
-      <span class="si-ko">${ch.ko}</span>
-      ${isReady ? `<span class="si-count">${ch.stories.length}</span>` : ''}
-    </div>`;
+    let g = groups.find(g => g.type === ch.type);
+    if (!g) { g = { type: ch.type, items: [] }; groups.push(g); }
+    g.items.push(ch);
+  });
+
+  let html = '';
+  groups.forEach(g => {
+    const isCollapsed = collapsedTypes.has(g.type);
+    const itemsHtml = g.items.map(ch => {
+      const isReady = !!ch.stories;
+      const activeClass = ch.id === currentChapterId ? ' active' : '';
+      const soonClass = !isReady ? ' soon' : '';
+      const onclick = isReady ? `onclick="selectChapterById('${ch.id}')"` : '';
+      return `<div class="sidebar-item${activeClass}${soonClass}" ${onclick}>
+        <span class="si-num">${ch.number}.</span>
+        <span class="si-hanja">${ch.hanja}</span>
+        <span class="si-ko">${ch.ko}</span>
+        ${isReady ? `<span class="si-count">${ch.stories.length}</span>` : ''}
+      </div>`;
+    }).join('');
+
+    const groupHeight = g.items.length * 38;
+    html += `
+      <div class="sidebar-type${isCollapsed ? ' collapsed' : ''}" onclick="toggleSidebarType('${g.type}')">
+        <span>${g.type}</span>
+        <span class="sidebar-type-arrow">▼</span>
+      </div>
+      <div class="sidebar-group${isCollapsed ? ' collapsed' : ''}" style="max-height:${isCollapsed ? 0 : groupHeight + 20}px">
+        ${itemsHtml}
+      </div>`;
   });
 
   sidebar.innerHTML = html;

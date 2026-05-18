@@ -113,8 +113,9 @@
     padding: 0.4rem 1.2rem; font-weight: 500;
     text-transform: uppercase;
   }
+  .si-num { font-size: 11px; color: var(--muted); min-width: 18px; }
   .sidebar-item {
-    display: flex; align-items: baseline; gap: 8px;
+    display: flex; align-items: baseline; gap: 6px;
     padding: 0.55rem 1.2rem; cursor: pointer;
     transition: background 0.15s; border-left: 3px solid transparent;
     font-size: 13px; color: var(--text);
@@ -983,6 +984,7 @@ function renderSidebar() {
     const soonClass = !isReady ? ' soon' : '';
     const onclick = isReady ? `onclick="selectChapterById('${ch.id}')"` : '';
     html += `<div class="sidebar-item${activeClass}${soonClass}" ${onclick}>
+      <span class="si-num">${ch.number}.</span>
       <span class="si-hanja">${ch.hanja}</span>
       <span class="si-ko">${ch.ko}</span>
       ${isReady ? `<span class="si-count">${ch.stories.length}</span>` : ''}

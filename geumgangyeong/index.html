@@ -514,15 +514,21 @@ function toggleCommentary(id) {
 
 function hl(text, q) {
   if (!q || !text) return text || '';
-  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'g');
-  return text.replace(re, '<mark>$1</mark>');
+  const terms = q.trim().split(/\s+/).filter(Boolean);
+  return terms.reduce((s, t) => {
+    const re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'g');
+    return s.replace(re, '<mark>$1</mark>');
+  }, text);
 }
 
 function renderSearch(q) {
+  const terms = q.trim().split(/\s+/).filter(Boolean);
   const items = DATA.filter(d =>
-    d.text.includes(q) || d.title.includes(q) ||
-    (d.titleKo && d.titleKo.includes(q)) ||
-    (d.meaning && d.meaning.includes(q))
+    terms.every(t =>
+      d.text.includes(t) || d.title.includes(t) ||
+      (d.titleKo && d.titleKo.includes(t)) ||
+      (d.meaning && d.meaning.includes(t))
+    )
   );
 
   const sidebar = document.getElementById('sidebar');

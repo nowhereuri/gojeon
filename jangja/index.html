@@ -1172,8 +1172,11 @@ let searchIndex = null;
 
 function highlight(str, q) {
   if (!q) return esc(str);
-  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  return esc(str).replace(new RegExp(escaped, 'gi'), m => `<mark>${m}</mark>`);
+  const terms = q.trim().split(/\s+/).filter(Boolean);
+  return terms.reduce((s, t) => {
+    const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return s.replace(new RegExp(escaped, 'gi'), m => `<mark>${m}</mark>`);
+  }, esc(str));
 }
 
 function doSearch(q) {
@@ -1189,8 +1192,9 @@ function doSearch(q) {
   }
 
   main.classList.add('search-mode');
-  const matched = searchIndex.filter(s => s.full.includes(q));
-  hint.textContent = `"${q}" — ${matched.length}건`;
+  const terms = q.trim().split(/\s+/).filter(Boolean);
+  const matched = searchIndex.filter(s => terms.every(t => s.full.includes(t)));
+  hint.textContent = `"${terms.join(' + ')}" — ${matched.length}건`;
 
   if (matched.length === 0) {
     results.innerHTML = `<div class="no-results">검색 결과가 없습니다.</div>`;

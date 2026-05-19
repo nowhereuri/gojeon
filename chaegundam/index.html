@@ -261,7 +261,7 @@
       <div class="logo-sub">채근담 전문 · 洪自誠 萬曆本</div>
     </div>
     <div class="search-area">
-      <input class="search-input" id="searchInput" type="text" placeholder="원문, 뜻, 직역, 해석으로 검색…" autocomplete="off">
+      <input class="search-input" id="searchInput" type="text" placeholder="검색어 입력 (스페이스로 구분하면 AND 검색)" autocomplete="off">
       <div class="search-hint" id="searchHint"></div>
     </div>
     <a class="home-link" href="../">← 고전 목록</a>
@@ -453,20 +453,27 @@ function selectChip(btn) {
   selectChapter(btn.dataset.col);
 }
 
-function renderSearch(q) {
-  const items = DATA.filter(d =>
-    d.text.includes(q) ||
-    (d.ko && d.ko.includes(q)) ||
-    (d.pron && d.pron.includes(q)) ||
-    (d.literal && d.literal.includes(q)) ||
-    (d.meaning && d.meaning.includes(q))
+function matchesAll(d, terms) {
+  return terms.every(t =>
+    d.text.includes(t) ||
+    (d.ko && d.ko.includes(t)) ||
+    (d.pron && d.pron.includes(t)) ||
+    (d.literal && d.literal.includes(t)) ||
+    (d.meaning && d.meaning.includes(t))
   );
+}
 
-  document.getElementById('searchHint').textContent = `${items.length}개 구절`;
+function renderSearch(q) {
+  const terms = q.split(/\s+/).filter(Boolean);
+  const items = DATA.filter(d => matchesAll(d, terms));
+
+  const termLabel = terms.length > 1 ? terms.join(' + ') : q;
+  document.getElementById('searchHint').textContent = `${items.length}개 구절${terms.length > 1 ? ' (AND)' : ''}`;
   document.getElementById('main').classList.add('search-mode');
 
   const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const hl = text => text.replace(new RegExp(esc(q), 'g'), `<mark>${q}</mark>`);
+  const hl = text => terms.reduce((t, term) =>
+    t.replace(new RegExp(esc(term), 'g'), `<mark>${term}</mark>`), text);
 
   if (!items.length) {
     document.getElementById('searchResults').innerHTML = `<div class="no-results">검색 결과가 없어요.</div>`;

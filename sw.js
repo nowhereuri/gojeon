@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gojeon-v1';
+const CACHE_NAME = 'gojeon-v2';
 const ASSETS = [
   '/gojeon/',
   '/gojeon/index.html',

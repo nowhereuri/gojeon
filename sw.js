@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gojeon-v4';
+const CACHE_NAME = 'gojeon-v5';
 const ASSETS = [
   '/gojeon/',
   '/gojeon/index.html',
@@ -21,6 +21,13 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    caches.open(CACHE_NAME).then(cache =>
+      fetch(e.request)
+        .then(r => {
+          cache.put(e.request, r.clone());
+          return r;
+        })
+        .catch(() => cache.match(e.request))
+    )
   );
 });

@@ -335,6 +335,22 @@
 
   .no-results { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
 
+  /* ===== TTS 카드별 ===== */
+  .tts-mini {
+    display:flex; align-items:center; gap:6px;
+    margin-bottom:1.2rem; padding:8px 12px;
+    background:var(--bg); border:1px solid var(--border); border-radius:4px;
+  }
+  .tts-mini-btn {
+    border:1px solid var(--border); border-radius:4px; background:transparent;
+    cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:12px;
+    color:var(--muted); padding:4px 10px; transition:all 0.2s;
+  }
+  .tts-mini-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .tts-mini-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tts-mini-btn:disabled { opacity:0.3; cursor:default; }
+  .tts-mini-status { font-size:11px; color:var(--muted); }
+
   /* ===== TTS 편 전체 ===== */
   .tts-chapter-bar {
     display:flex; align-items:center; gap:8px;
@@ -1101,6 +1117,12 @@ function renderChapter(ch) {
           <span class="story-arrow">▼</span>
         </div>
         <div class="story-body">
+          <div class="tts-mini">
+            <button class="tts-mini-btn" id="ttsPlay-${s.id}" onclick="ttsPlayCard('${s.id}')">▶ 읽어주기</button>
+            <button class="tts-mini-btn" id="ttsPause-${s.id}" onclick="ttsPauseCard()" disabled>⏸</button>
+            <button class="tts-mini-btn" id="ttsStop-${s.id}" onclick="ttsStopAll()" disabled>⏹</button>
+            <span class="tts-mini-status" id="ttsStatus-${s.id}"></span>
+          </div>
           <div class="section-label">원문 <span style="font-size:9px;color:var(--muted);font-weight:300;letter-spacing:0">· 클릭하면 한자 풀이</span></div>
           <div class="text-original" onclick="showHanjaModal('${s.id}')">${rubyText(s.text)}</div>
           <hr class="section-divider">
@@ -1164,7 +1186,89 @@ function toggleIntro(chapterId) {
 function toggleStory(id) {
   const card = document.getElementById(id);
   if (!card) return;
+  if (card.classList.contains('open') && ttsCurrentId === id) ttsStopAll();
   card.classList.toggle('open');
+}
+
+/* ===== TTS 카드별 ===== */
+let ttsCurrentId = null;
+let ttsMiniState = 'stopped';
+
+function ttsPlayCard(id) {
+  const all = getAllChapters();
+  let s = null;
+  for (const ch of all) { if (ch.stories) { s = ch.stories.find(x => x.id === id); if (s) break; } }
+  if (!s) return;
+  ttsChapterStop();
+  if (ttsMiniState === 'paused' && ttsCurrentId === id) {
+    window.speechSynthesis.resume();
+    ttsMiniState = 'playing';
+    updateTtsMiniUI(id);
+    return;
+  }
+  const prevId = ttsCurrentId;
+  window.speechSynthesis.cancel();
+  if (prevId) updateTtsMiniUI(prevId);
+  ttsCurrentId = id;
+  const utt1 = new SpeechSynthesisUtterance((s.literal || '').replace(/\n/g, ' '));
+  utt1.lang = 'ko-KR'; utt1.rate = 0.9;
+  utt1.onstart = () => { ttsMiniState = 'playing'; updateTtsMiniUI(id, '직역 읽는 중…'); };
+  if (s.meaning) {
+    const utt2 = new SpeechSynthesisUtterance(s.meaning.replace(/\n/g, ' '));
+    utt2.lang = 'ko-KR'; utt2.rate = 0.9;
+    utt2.onstart = () => { updateTtsMiniUI(id, '해석 읽는 중…'); };
+    utt2.onend = () => { ttsMiniState = 'stopped'; ttsCurrentId = null; updateTtsMiniUI(id); };
+    utt2.onerror = () => { ttsMiniState = 'stopped'; ttsCurrentId = null; updateTtsMiniUI(id); };
+    window.speechSynthesis.speak(utt1);
+    window.speechSynthesis.speak(utt2);
+  } else {
+    utt1.onend = () => { ttsMiniState = 'stopped'; ttsCurrentId = null; updateTtsMiniUI(id); };
+    utt1.onerror = () => { ttsMiniState = 'stopped'; ttsCurrentId = null; updateTtsMiniUI(id); };
+    window.speechSynthesis.speak(utt1);
+  }
+  ttsMiniState = 'playing';
+  updateTtsMiniUI(id, '직역 읽는 중…');
+}
+
+function ttsPauseCard() {
+  if (ttsMiniState === 'playing') {
+    window.speechSynthesis.pause();
+    ttsMiniState = 'paused';
+    if (ttsCurrentId) updateTtsMiniUI(ttsCurrentId);
+  }
+}
+
+function ttsStopAll() {
+  const prevId = ttsCurrentId;
+  window.speechSynthesis.cancel();
+  ttsMiniState = 'stopped';
+  ttsCurrentId = null;
+  if (prevId) updateTtsMiniUI(prevId);
+}
+
+function updateTtsMiniUI(id, statusText) {
+  const playBtn = document.getElementById('ttsPlay-' + id);
+  const pauseBtn = document.getElementById('ttsPause-' + id);
+  const stopBtn = document.getElementById('ttsStop-' + id);
+  const status = document.getElementById('ttsStatus-' + id);
+  if (!playBtn) return;
+  const isThis = ttsCurrentId === id;
+  if (!isThis || ttsMiniState === 'stopped') {
+    playBtn.textContent = '▶ 읽어주기'; playBtn.classList.remove('active');
+    if (pauseBtn) { pauseBtn.disabled = true; }
+    if (stopBtn) stopBtn.disabled = true;
+    if (status) status.textContent = '';
+  } else if (ttsMiniState === 'playing') {
+    playBtn.textContent = '▶ 재생 중'; playBtn.classList.add('active');
+    if (pauseBtn) { pauseBtn.disabled = false; }
+    if (stopBtn) stopBtn.disabled = false;
+    if (status) status.textContent = statusText || '';
+  } else if (ttsMiniState === 'paused') {
+    playBtn.textContent = '▶ 계속'; playBtn.classList.remove('active');
+    if (pauseBtn) { pauseBtn.disabled = true; }
+    if (stopBtn) stopBtn.disabled = false;
+    if (status) status.textContent = '일시정지됨';
+  }
 }
 
 /* ===== TTS 편 전체 ===== */
@@ -1185,6 +1289,7 @@ function ttsChapterPlay() {
   const all = getAllChapters();
   const ch = all.find(c => c.id === currentChapterId);
   if (!ch || !ch.stories || ch.stories.length === 0) return;
+  ttsStopAll();
   ttsChapterStories = ch.stories;
   ttsChapterIdx = 0;
   ttsChapterPhase = 'literal';

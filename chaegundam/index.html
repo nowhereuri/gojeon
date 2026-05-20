@@ -259,6 +259,22 @@
   .tts-mini-btn:disabled { opacity:0.3; cursor:default; }
   .tts-mini-status { font-size:11px; color:var(--muted); }
 
+  /* ===== TTS 편 전체 ===== */
+  .tts-chapter-bar {
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    margin-bottom:1.2rem; padding:10px 14px;
+    background:var(--bg); border:1px solid var(--border); border-radius:6px;
+  }
+  .tts-ch-btn {
+    border:1px solid var(--border); border-radius:4px; background:transparent;
+    cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:12px;
+    color:var(--muted); padding:5px 12px; transition:all 0.2s;
+  }
+  .tts-ch-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .tts-ch-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tts-ch-btn:disabled { opacity:0.3; cursor:default; }
+  .tts-ch-status { font-size:11px; color:var(--muted); }
+
   /* 반응형 */
   @media (max-width: 700px) {
     aside { display: none; }
@@ -450,6 +466,12 @@ function renderChapter(col) {
       <div class="ch-ko">${ch.ko}</div>
       <div class="ch-meaning">${ch.meaning} · ${items.length}구절</div>
     </div>
+    <div class="tts-chapter-bar">
+      <button class="tts-ch-btn" id="ttsChapterPlay" onclick="ttsChapterPlay()">▶ 편 전체 읽기</button>
+      <button class="tts-ch-btn" id="ttsChapterPause" onclick="ttsChapterPause()" disabled>⏸ 일시정지</button>
+      <button class="tts-ch-btn" id="ttsChapterStop" onclick="ttsChapterStop()" disabled>⏹ 정지</button>
+      <span class="tts-ch-status" id="ttsChapterStatus"></span>
+    </div>
     ${cardsHtml}
   `;
 }
@@ -467,6 +489,7 @@ let ttsMiniState = 'stopped';
 function ttsPlayCard(id) {
   const d = DATA.find(x => x.id === id);
   if (!d) return;
+  ttsChapterStop();
   if (ttsMiniState === 'paused' && ttsCurrentId === id) {
     window.speechSynthesis.resume();
     ttsMiniState = 'playing';
@@ -513,6 +536,110 @@ function ttsStopAll() {
   if (prevId) updateTtsMiniUI(prevId);
 }
 
+/* ===== TTS 편 전체 ===== */
+let ttsChapterState = 'stopped';
+let ttsChapterItems = [];
+let ttsChapterIdx = 0;
+let ttsChapterPhase = 'literal';
+let ttsChapterPrevId = null;
+
+function ttsChapterPlay() {
+  if (ttsChapterState === 'paused') {
+    window.speechSynthesis.resume();
+    ttsChapterState = 'playing';
+    updateTtsChapterUI();
+    return;
+  }
+  if (ttsChapterState === 'playing') return;
+  const items = DATA.filter(d => d.col === currentCol);
+  if (!items.length) return;
+  ttsStopAll();
+  ttsChapterItems = items;
+  ttsChapterIdx = 0;
+  ttsChapterPhase = 'literal';
+  ttsChapterPrevId = null;
+  ttsChapterState = 'playing';
+  window.speechSynthesis.cancel();
+  ttsChapterReadNext();
+}
+
+function ttsChapterReadNext() {
+  if (ttsChapterState !== 'playing') return;
+  if (ttsChapterIdx >= ttsChapterItems.length) {
+    if (ttsChapterPrevId) document.getElementById('card-' + ttsChapterPrevId)?.classList.remove('open');
+    ttsChapterState = 'stopped';
+    ttsChapterPrevId = null;
+    updateTtsChapterUI();
+    return;
+  }
+  const d = ttsChapterItems[ttsChapterIdx];
+  const text = ttsChapterPhase === 'literal' ? (d.literal || '') : (d.meaning || '');
+  if (ttsChapterPhase === 'literal') {
+    if (ttsChapterPrevId && ttsChapterPrevId !== d.id) {
+      document.getElementById('card-' + ttsChapterPrevId)?.classList.remove('open');
+    }
+    const card = document.getElementById('card-' + d.id);
+    if (card) { card.classList.add('open'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    ttsChapterPrevId = d.id;
+    updateTtsChapterUI(`${ttsChapterIdx + 1} / ${ttsChapterItems.length} — 직역 읽는 중…`);
+  } else {
+    updateTtsChapterUI(`${ttsChapterIdx + 1} / ${ttsChapterItems.length} — 해석 읽는 중…`);
+  }
+  if (!text.trim()) { ttsChapterAdvance(); return; }
+  const utt = new SpeechSynthesisUtterance(text.replace(/\n/g, ' '));
+  utt.lang = 'ko-KR'; utt.rate = 0.9;
+  utt.onend = () => { if (ttsChapterState === 'playing') ttsChapterAdvance(); };
+  utt.onerror = (e) => { if (e.error === 'interrupted' || e.error === 'canceled') return; if (ttsChapterState === 'playing') ttsChapterAdvance(); };
+  window.speechSynthesis.speak(utt);
+}
+
+function ttsChapterAdvance() {
+  if (ttsChapterPhase === 'literal') { ttsChapterPhase = 'meaning'; }
+  else { ttsChapterPhase = 'literal'; ttsChapterIdx++; }
+  ttsChapterReadNext();
+}
+
+function ttsChapterPause() {
+  if (ttsChapterState === 'playing') {
+    window.speechSynthesis.pause();
+    ttsChapterState = 'paused';
+    updateTtsChapterUI();
+  }
+}
+
+function ttsChapterStop() {
+  if (ttsChapterState === 'stopped') return;
+  window.speechSynthesis.cancel();
+  if (ttsChapterPrevId) document.getElementById('card-' + ttsChapterPrevId)?.classList.remove('open');
+  ttsChapterState = 'stopped';
+  ttsChapterPrevId = null;
+  updateTtsChapterUI();
+}
+
+function updateTtsChapterUI(statusText) {
+  const playBtn = document.getElementById('ttsChapterPlay');
+  const pauseBtn = document.getElementById('ttsChapterPause');
+  const stopBtn = document.getElementById('ttsChapterStop');
+  const status = document.getElementById('ttsChapterStatus');
+  if (!playBtn) return;
+  if (ttsChapterState === 'stopped') {
+    playBtn.textContent = '▶ 편 전체 읽기'; playBtn.classList.remove('active');
+    if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.textContent = '⏸ 일시정지'; }
+    if (stopBtn) stopBtn.disabled = true;
+    if (status) status.textContent = '';
+  } else if (ttsChapterState === 'playing') {
+    playBtn.textContent = '▶ 재생 중'; playBtn.classList.add('active');
+    if (pauseBtn) { pauseBtn.disabled = false; pauseBtn.textContent = '⏸ 일시정지'; }
+    if (stopBtn) stopBtn.disabled = false;
+    if (status) status.textContent = statusText || '';
+  } else if (ttsChapterState === 'paused') {
+    playBtn.textContent = '▶ 계속'; playBtn.classList.remove('active');
+    if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.textContent = '⏸ 일시정지'; }
+    if (stopBtn) stopBtn.disabled = false;
+    if (status) status.textContent = '일시정지됨';
+  }
+}
+
 function updateTtsMiniUI(id, statusText) {
   const playBtn = document.getElementById('ttsPlay-' + id);
   const pauseBtn = document.getElementById('ttsPause-' + id);
@@ -546,6 +673,7 @@ function selectChapter(col) {
   document.getElementById('searchInput').value = '';
   document.getElementById('searchHint').textContent = '';
   document.getElementById('main').classList.remove('search-mode');
+  ttsChapterStop();
   renderSidebar();
   renderChapter(col);
   document.querySelectorAll('.type-chip').forEach(c => {

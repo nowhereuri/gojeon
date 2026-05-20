@@ -115,6 +115,23 @@
     white-space:pre-wrap;
   }
 
+  /* ===== TTS ===== */
+  .tts-bar {
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:1.2rem; padding:10px 14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  }
+  .tts-btn {
+    border:1px solid var(--border); border-radius:4px;
+    background:transparent; cursor:pointer;
+    font-family:'Noto Sans KR',sans-serif; font-size:13px;
+    color:var(--muted); padding:5px 12px; transition:all 0.2s;
+  }
+  .tts-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .tts-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tts-btn:disabled { opacity:0.3; cursor:default; }
+  .tts-status { font-size:12px; color:var(--muted); margin-left:4px; }
+
   .nav-btns { display:flex; justify-content:space-between; margin-top:2rem; }
   .nav-btn {
     padding:8px 18px; border:1px solid var(--border); border-radius:4px;
@@ -381,6 +398,97 @@ let currentId = null;
 let searchMode = false;
 let searchQuery = '';
 
+/* ===== TTS ===== */
+let ttsState = 'stopped'; // 'stopped' | 'playing' | 'paused'
+
+function toKoreanReading(text) {
+  return text.split('').map(ch => {
+    if (isCJK(ch)) {
+      const info = HANJA_DICT[ch];
+      return info ? info.r + ' ' : ch + ' ';
+    }
+    if (/[，。？！、；：「」]/.test(ch)) return '. ';
+    if (ch === '\n') return '. ';
+    return ch;
+  }).join('');
+}
+
+function ttsStop() {
+  window.speechSynthesis.cancel();
+  ttsState = 'stopped';
+  updateTtsUI();
+}
+
+function ttsPlay() {
+  const d = DATA.find(x => x.id === currentId);
+  if (!d) return;
+
+  if (ttsState === 'paused') {
+    window.speechSynthesis.resume();
+    ttsState = 'playing';
+    updateTtsUI();
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utt1 = new SpeechSynthesisUtterance((d.meaning || '').replace(/\n/g, ' '));
+  utt1.lang = 'ko-KR';
+  utt1.rate = 0.9;
+
+  const utt2 = new SpeechSynthesisUtterance((d.commentary || '').replace(/\n/g, ' '));
+  utt2.lang = 'ko-KR';
+  utt2.rate = 0.9;
+
+  utt1.onstart = () => { ttsState = 'playing'; updateTtsUI('번역 읽는 중…'); };
+  utt2.onstart = () => { updateTtsUI('해설 읽는 중…'); };
+  utt2.onend = () => { ttsState = 'stopped'; updateTtsUI(); };
+  utt2.onerror = () => { ttsState = 'stopped'; updateTtsUI(); };
+
+  window.speechSynthesis.speak(utt1);
+  if (d.commentary) window.speechSynthesis.speak(utt2);
+  ttsState = 'playing';
+  updateTtsUI('번역 읽는 중…');
+}
+
+function ttsPause() {
+  if (ttsState === 'playing') {
+    window.speechSynthesis.pause();
+    ttsState = 'paused';
+    updateTtsUI();
+  }
+}
+
+function updateTtsUI(statusText) {
+  const playBtn = document.getElementById('ttsPlay');
+  const pauseBtn = document.getElementById('ttsPause');
+  const stopBtn = document.getElementById('ttsStop');
+  const status = document.getElementById('ttsStatus');
+  if (!playBtn) return;
+
+  if (ttsState === 'stopped') {
+    playBtn.textContent = '▶ 읽어주기';
+    playBtn.classList.remove('active');
+    pauseBtn.disabled = true;
+    stopBtn.disabled = true;
+    if (status) status.textContent = '';
+  } else if (ttsState === 'playing') {
+    playBtn.textContent = '▶ 재생 중';
+    playBtn.classList.add('active');
+    pauseBtn.disabled = false;
+    pauseBtn.textContent = '⏸ 일시정지';
+    stopBtn.disabled = false;
+    if (status) status.textContent = statusText || '';
+  } else if (ttsState === 'paused') {
+    playBtn.textContent = '▶ 계속 읽기';
+    playBtn.classList.remove('active');
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = '⏸ 일시정지';
+    stopBtn.disabled = false;
+    if (status) status.textContent = '일시정지됨';
+  }
+}
+
 function isCJK(ch) {
   return /[一-鿿㐀-䶿]/.test(ch);
 }
@@ -455,6 +563,7 @@ function renderSelect() {
 }
 
 function selectById(id) {
+  ttsStop();
   searchMode = false;
   searchQuery = '';
   document.getElementById('searchInput').value = '';
@@ -477,6 +586,13 @@ function renderChapter() {
       <div class="chapter-num">제${d.num}분</div>
       <div class="chapter-title">${d.title}</div>
       <div class="chapter-ko">${d.titleKo}</div>
+    </div>
+
+    <div class="tts-bar">
+      <button class="tts-btn" id="ttsPlay" onclick="ttsPlay()">▶ 읽어주기</button>
+      <button class="tts-btn" id="ttsPause" onclick="ttsPause()" disabled>⏸ 일시정지</button>
+      <button class="tts-btn" id="ttsStop" onclick="ttsStop()" disabled>⏹ 정지</button>
+      <span class="tts-status" id="ttsStatus"></span>
     </div>
 
     <div class="section-label">원문 原文 <span style="font-size:9px;color:var(--muted);font-weight:300;letter-spacing:0">· 클릭하면 한자 풀이</span></div>

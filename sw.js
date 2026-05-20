@@ -1,10 +1,13 @@
-const CACHE_NAME = 'gojeon-v6';
+const CACHE_NAME = 'gojeon-20260520';
 const ASSETS = [
   '/gojeon/',
   '/gojeon/index.html',
   '/gojeon/chaegundam/',
   '/gojeon/chaegundam/index.html',
-  '/gojeon/chaegundam/data.js'
+  '/gojeon/chaegundam/data.js',
+  '/gojeon/banyasimgyeong/',
+  '/gojeon/banyasimgyeong/index.html',
+  '/gojeon/banyasimgyeong/data.js'
 ];
 
 self.addEventListener('install', e => {

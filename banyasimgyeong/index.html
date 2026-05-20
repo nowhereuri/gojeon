@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>반야심경 — 摩訶般若波羅蜜多心經</title>
+<link rel="icon" type="image/svg+xml" href="../icon.svg">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+  :root {
+    --bg:#f7f4ef; --surface:#fefcf8; --border:#ddd8ce;
+    --text:#2a2520; --muted:#8c8075; --accent:#7a5c3a;
+    --highlight:#e8dfd0; --sidebar-w:220px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; font-weight:300; min-height:100vh; }
+
+  /* ===== 헤더 ===== */
+  header {
+    background:var(--surface); border-bottom:1px solid var(--border);
+    padding:1rem 1.5rem; position:sticky; top:0; z-index:100;
+  }
+  .header-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+  .logo { font-family:'Noto Serif KR',serif; font-size:20px; font-weight:600; color:var(--accent); letter-spacing:2px; white-space:nowrap; }
+  .logo-sub { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .home-link { font-size:11px; color:var(--muted); text-decoration:none; border:1px solid var(--border); padding:3px 10px; border-radius:20px; transition:all 0.2s; white-space:nowrap; }
+  .home-link:hover { color:var(--accent); border-color:var(--accent); }
+  .search-input {
+    flex:1; min-width:180px; padding:8px 14px;
+    border:1px solid var(--border); border-radius:4px;
+    background:var(--bg); font-family:'Noto Sans KR',sans-serif;
+    font-size:14px; color:var(--text); outline:none; transition:border-color 0.2s;
+  }
+  .search-input:focus { border-color:var(--accent); }
+
+  /* ===== 레이아웃 ===== */
+  .layout { display:flex; max-width:1100px; margin:0 auto; min-height:calc(100vh - 60px); }
+
+  /* ===== 사이드바 ===== */
+  .sidebar {
+    width:var(--sidebar-w); flex-shrink:0;
+    border-right:1px solid var(--border); background:var(--surface);
+    position:sticky; top:60px; height:calc(100vh - 60px);
+    overflow-y:auto; padding:1rem 0;
+  }
+  .sidebar-item {
+    display:flex; align-items:baseline; gap:6px;
+    padding:7px 16px; cursor:pointer; transition:background 0.15s;
+    border-left:3px solid transparent; font-size:13px;
+  }
+  .sidebar-item:hover { background:var(--highlight); }
+  .sidebar-item.active { border-left-color:var(--accent); background:var(--highlight); font-weight:500; }
+  .sidebar-item.fulltext { border-bottom:1px solid var(--border); margin-bottom:4px; padding-bottom:10px; }
+  .sidebar-num { font-size:11px; color:var(--muted); min-width:28px; }
+  .sidebar-title { font-family:'Noto Serif KR',serif; font-size:13px; color:var(--accent); }
+  .sidebar-ko { font-size:11px; color:var(--muted); }
+
+  .sidebar-search-item {
+    padding:6px 16px; cursor:pointer; font-size:12px; color:var(--muted);
+    transition:background 0.15s;
+  }
+  .sidebar-search-item:hover { background:var(--highlight); color:var(--accent); }
+
+  /* ===== 메인 ===== */
+  .main { flex:1; padding:2rem 2.5rem; min-width:0; }
+
+  /* 검색 결과 */
+  .search-result-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+    padding:1.2rem 1.5rem; margin-bottom:10px; cursor:pointer; transition:all 0.2s;
+  }
+  .search-result-card:hover { border-color:var(--accent); box-shadow:0 2px 10px rgba(122,92,58,0.08); }
+  .src-top { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .src-tag { font-size:11px; padding:2px 8px; border-radius:20px; background:#ece6f0; color:#5a4a6b; font-weight:500; }
+  .src-title { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--accent); }
+  .src-ko { font-size:12px; color:var(--muted); }
+  .src-preview { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--text); line-height:1.8; margin-top:4px; }
+  mark { background:#fde68a; color:inherit; border-radius:2px; padding:0 1px; }
+
+  /* ===== 단 상세 뷰 ===== */
+  .chapter-header { margin-bottom:1.8rem; }
+  .chapter-num { font-size:12px; color:var(--muted); margin-bottom:0.3rem; }
+  .chapter-title { font-family:'Noto Serif KR',serif; font-size:26px; font-weight:600; color:var(--accent); margin-bottom:0.2rem; }
+  .chapter-ko { font-size:14px; color:var(--muted); }
+
+  .section-label { font-size:11px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; font-weight:500; }
+  .original-text { font-family:'Noto Serif KR',serif; font-size:17px; line-height:2.2; color:var(--text); margin-bottom:2rem; }
+  .original-text.clickable { cursor:pointer; }
+  .original-text.clickable:hover { background:var(--highlight); border-radius:4px; }
+  .original-text ruby rt { font-size:10px; color:var(--muted); ruby-position:under; }
+
+  /* 주문 특별 스타일 */
+  .phonetic-bar {
+    background:var(--highlight); border:1px solid var(--border); border-radius:6px;
+    padding:1rem 1.4rem; margin-bottom:2rem;
+    font-family:'Noto Serif KR',serif; font-size:18px; color:var(--accent);
+    letter-spacing:2px; text-align:center; line-height:2;
+  }
+  .phonetic-label { font-size:11px; color:var(--muted); letter-spacing:1px; display:block; margin-bottom:4px; font-family:'Noto Sans KR',sans-serif; }
+
+  .meaning-box {
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+    padding:1.4rem 1.6rem; font-size:15px; line-height:2; color:var(--text);
+  }
+
+  /* ===== 해설 아코디언 ===== */
+  .commentary-wrap { margin-top:1.2rem; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+  .commentary-toggle {
+    width:100%; padding:0.9rem 1.2rem;
+    background:var(--bg); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:'Noto Sans KR',sans-serif; font-size:13px; color:var(--muted);
+    transition:background 0.2s;
+  }
+  .commentary-toggle:hover { background:var(--highlight); }
+  .commentary-toggle .ct-label { display:flex; align-items:center; gap:6px; }
+  .commentary-toggle .ct-arrow { font-size:11px; transition:transform 0.3s; }
+  .commentary-wrap.open .ct-arrow { transform:rotate(180deg); }
+  .commentary-body { max-height:0; overflow:hidden; transition:max-height 0.4s ease; }
+  .commentary-wrap.open .commentary-body { max-height:2000px; }
+  .commentary-content {
+    padding:1.2rem 1.4rem; border-top:1px solid var(--border);
+    font-size:14px; line-height:2; color:var(--text);
+    white-space:pre-wrap;
+  }
+
+  /* ===== TTS ===== */
+  .tts-bar {
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:1.2rem; padding:10px 14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  }
+  .tts-btn {
+    border:1px solid var(--border); border-radius:4px;
+    background:transparent; cursor:pointer;
+    font-family:'Noto Sans KR',sans-serif; font-size:13px;
+    color:var(--muted); padding:5px 12px; transition:all 0.2s;
+  }
+  .tts-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .tts-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tts-btn:disabled { opacity:0.3; cursor:default; }
+  .tts-status { font-size:12px; color:var(--muted); margin-left:4px; }
+
+  .nav-btns { display:flex; justify-content:space-between; margin-top:2rem; }
+  .nav-btn {
+    padding:8px 18px; border:1px solid var(--border); border-radius:4px;
+    background:transparent; font-family:'Noto Sans KR',sans-serif;
+    font-size:13px; color:var(--muted); cursor:pointer; transition:all 0.2s;
+  }
+  .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .nav-btn:disabled { opacity:0.3; cursor:default; }
+
+  /* ===== 한자 풀이 모달 ===== */
+  .hanja-modal-overlay {
+    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.4); z-index:300;
+    justify-content:center; align-items:flex-start;
+    overflow-y:auto; padding:2rem 1rem;
+  }
+  .hanja-modal-overlay.open { display:flex; }
+  .hanja-modal {
+    background:var(--surface); border-radius:10px; padding:1.8rem 2rem;
+    box-shadow:0 8px 40px rgba(0,0,0,0.15); max-width:700px; width:100%; position:relative;
+  }
+  .hanja-modal-close { position:absolute; top:0.8rem; right:1rem; background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; }
+  .hanja-modal-title { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--accent); margin-bottom:1.2rem; font-weight:500; }
+  .anno-grid { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .anno-card {
+    display:flex; flex-direction:column; align-items:center;
+    min-width:52px; padding:6px 8px;
+    background:var(--bg); border:1px solid var(--border); border-radius:6px;
+  }
+  .anno-card .ac-hanja { font-family:'Noto Serif KR',serif; font-size:20px; font-weight:400; color:var(--text); line-height:1.3; }
+  .anno-card .ac-mean { font-size:12px; color:var(--accent); line-height:1.3; margin-top:2px; }
+  .anno-card .ac-read { font-size:12px; color:var(--muted); line-height:1.3; }
+  .anno-break { width:100%; height:8px; }
+  .anno-punct { font-size:16px; color:var(--muted); align-self:center; padding:0 2px; }
+
+  /* ===== 모바일 ===== */
+  .chapter-select-wrap { display:none; padding:0.8rem 1rem; background:var(--surface); border-bottom:1px solid var(--border); }
+  .chapter-select { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:4px; background:var(--bg); font-family:'Noto Sans KR',sans-serif; font-size:14px; color:var(--text); outline:none; }
+
+  .empty { text-align:center; padding:4rem 1rem; color:var(--muted); font-size:15px; }
+  .empty .em { font-family:'Noto Serif KR',serif; font-size:28px; color:var(--border); display:block; margin-bottom:1rem; }
+
+  @media (max-width:700px) {
+    .sidebar { display:none; }
+    .chapter-select-wrap { display:block; }
+    .layout { display:block; }
+    .main { padding:1.2rem 1rem; }
+    .chapter-title { font-size:20px; }
+    .original-text { font-size:15px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="logo">般若心經</div>
+      <div class="logo-sub">마하반야바라밀다심경 · 9단</div>
+    </div>
+    <input class="search-input" id="searchInput" type="text" placeholder="한자, 단 제목, 번역으로 검색...">
+    <a href="../" class="home-link">← 고전 목록</a>
+  </div>
+</header>
+
+<div class="chapter-select-wrap">
+  <select class="chapter-select" id="chapterSelect" onchange="selectById(this.value)"></select>
+</div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<!-- 한자 모달 -->
+<div class="hanja-modal-overlay" id="hanjaOverlay" onclick="closeHanjaModal(event)">
+  <div class="hanja-modal">
+    <button class="hanja-modal-close" onclick="closeHanjaModal()">&times;</button>
+    <div class="hanja-modal-title" id="hanjaModalTitle"></div>
+    <div id="hanjaGrid"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const HANJA_DICT = {
+  '觀':{m:'볼',r:'관'},'自':{m:'스스로',r:'자'},'在':{m:'있을',r:'재'},
+  '菩':{m:'보리',r:'보'},'薩':{m:'보살',r:'살'},'行':{m:'행할',r:'행'},
+  '深':{m:'깊을',r:'심'},'般':{m:'반',r:'반'},'若':{m:'지혜',r:'야'},
+  '波':{m:'물결',r:'파'},'羅':{m:'그물',r:'나'},'蜜':{m:'꿀',r:'밀'},
+  '多':{m:'많을',r:'다'},'時':{m:'때',r:'시'},'照':{m:'비출',r:'조'},
+  '見':{m:'볼',r:'견'},'五':{m:'다섯',r:'오'},'蘊':{m:'쌓을',r:'온'},
+  '皆':{m:'다',r:'개'},'空':{m:'빌',r:'공'},'度':{m:'건널',r:'도'},
+  '一':{m:'한',r:'일'},'切':{m:'끊을',r:'절'},'苦':{m:'쓸',r:'고'},
+  '厄':{m:'재앙',r:'액'},'舍':{m:'집',r:'사'},'利':{m:'이로울',r:'이'},
+  '子':{m:'아들',r:'자'},'色':{m:'빛',r:'색'},'不':{m:'아닐',r:'불'},
+  '異':{m:'다를',r:'이'},'即':{m:'곧',r:'즉'},'是':{m:'이',r:'시'},
+  '受':{m:'받을',r:'수'},'想':{m:'생각',r:'상'},'識':{m:'알',r:'식'},
+  '亦':{m:'또',r:'역'},'復':{m:'다시',r:'부'},'如':{m:'같을',r:'여'},
+  '諸':{m:'모든',r:'제'},'法':{m:'법',r:'법'},'相':{m:'모습',r:'상'},
+  '生':{m:'날',r:'생'},'滅':{m:'멸할',r:'멸'},'垢':{m:'때',r:'구'},
+  '淨':{m:'깨끗',r:'정'},'增':{m:'더할',r:'증'},'減':{m:'줄',r:'감'},
+  '故':{m:'까닭',r:'고'},'中':{m:'가운데',r:'중'},'無':{m:'없을',r:'무'},
+  '眼':{m:'눈',r:'안'},'耳':{m:'귀',r:'이'},'鼻':{m:'코',r:'비'},
+  '舌':{m:'혀',r:'설'},'身':{m:'몸',r:'신'},'意':{m:'뜻',r:'의'},
+  '聲':{m:'소리',r:'성'},'香':{m:'향기',r:'향'},'味':{m:'맛',r:'미'},
+  '觸':{m:'닿을',r:'촉'},'界':{m:'경계',r:'계'},'乃':{m:'이에',r:'내'},
+  '至':{m:'이를',r:'지'},'明':{m:'밝을',r:'명'},'老':{m:'늙을',r:'로'},
+  '死':{m:'죽을',r:'사'},'盡':{m:'다할',r:'진'},'集':{m:'모을',r:'집'},
+  '道':{m:'길',r:'도'},'智':{m:'지혜',r:'지'},'得':{m:'얻을',r:'득'},
+  '以':{m:'써',r:'이'},'所':{m:'바',r:'소'},'提':{m:'들',r:'제'},
+  '依':{m:'의지할',r:'의'},'心':{m:'마음',r:'심'},'罣':{m:'걸릴',r:'괘'},
+  '礙':{m:'거리낄',r:'애'},'有':{m:'있을',r:'유'},'恐':{m:'두려울',r:'공'},
+  '怖':{m:'두려울',r:'포'},'遠':{m:'멀',r:'원'},'離':{m:'떠날',r:'이'},
+  '顚':{m:'넘어질',r:'전'},'倒':{m:'넘어질',r:'도'},'夢':{m:'꿈',r:'몽'},
+  '究':{m:'궁구할',r:'구'},'竟':{m:'마칠',r:'경'},'涅':{m:'진흙',r:'열'},
+  '槃':{m:'반',r:'반'},'三':{m:'셋',r:'삼'},'世':{m:'세상',r:'세'},
+  '佛':{m:'부처',r:'불'},'耨':{m:'김맬',r:'누'},'藐':{m:'멀',r:'막'},
+  '阿':{m:'언덕',r:'아'},'大':{m:'클',r:'대'},'神':{m:'귀신',r:'신'},
+  '咒':{m:'주문',r:'주'},'上':{m:'위',r:'상'},'等':{m:'같을',r:'등'},
+  '能':{m:'능할',r:'능'},'除':{m:'덜',r:'제'},'真':{m:'참',r:'진'},
+  '實':{m:'열매',r:'실'},'虛':{m:'빌',r:'허'},'說':{m:'말씀',r:'설'},
+  '揭':{m:'들',r:'게'},'諦':{m:'자세할',r:'체'},'僧':{m:'중',r:'승'},
+  '婆':{m:'할미',r:'파'},'訶':{m:'꾸짖을',r:'하'},'摩':{m:'갈',r:'마'},
+  '經':{m:'지날',r:'경'},'埵':{m:'언덕',r:'타'},'亦':{m:'또',r:'역'},
+  '是':{m:'이',r:'시'},'故':{m:'까닭',r:'고'},'知':{m:'알',r:'지'},
+};
+
+let currentId = null;
+let searchMode = false;
+let searchQuery = '';
+let ttsState = 'stopped';
+
+function toKoreanReading(text) {
+  return text.split('').map(ch => {
+    if (isCJK(ch)) {
+      const info = HANJA_DICT[ch];
+      return info ? info.r + ' ' : ch + ' ';
+    }
+    if (/[，。？！、；：「」]/.test(ch)) return '. ';
+    if (ch === '\n') return '. ';
+    return ch;
+  }).join('');
+}
+
+function ttsStop() {
+  window.speechSynthesis.cancel();
+  ttsState = 'stopped';
+  updateTtsUI();
+}
+
+function ttsPlay() {
+  const d = DATA.find(x => x.id === currentId);
+  if (!d) return;
+
+  if (ttsState === 'paused') {
+    window.speechSynthesis.resume();
+    ttsState = 'playing';
+    updateTtsUI();
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  // 주문 단락은 음차 독음으로 읽기
+  const meaningText = d.phonetic
+    ? d.phonetic
+    : (d.meaning || '').replace(/\n/g, ' ');
+
+  const utt1 = new SpeechSynthesisUtterance(meaningText);
+  utt1.lang = 'ko-KR';
+  utt1.rate = 0.85;
+
+  utt1.onstart = () => { ttsState = 'playing'; updateTtsUI(d.num === 0 ? '전체 읽는 중…' : '번역 읽는 중…'); };
+
+  if (d.commentary) {
+    const utt2 = new SpeechSynthesisUtterance((d.commentary || '').replace(/\n/g, ' '));
+    utt2.lang = 'ko-KR';
+    utt2.rate = 0.85;
+    utt2.onstart = () => { updateTtsUI('해설 읽는 중…'); };
+    utt2.onend = () => { ttsState = 'stopped'; updateTtsUI(); };
+    utt2.onerror = () => { ttsState = 'stopped'; updateTtsUI(); };
+    window.speechSynthesis.speak(utt1);
+    window.speechSynthesis.speak(utt2);
+  } else {
+    utt1.onend = () => { ttsState = 'stopped'; updateTtsUI(); };
+    utt1.onerror = () => { ttsState = 'stopped'; updateTtsUI(); };
+    window.speechSynthesis.speak(utt1);
+  }
+
+  ttsState = 'playing';
+  updateTtsUI(d.num === 0 ? '전체 읽는 중…' : '번역 읽는 중…');
+}
+
+function ttsPause() {
+  if (ttsState === 'playing') {
+    window.speechSynthesis.pause();
+    ttsState = 'paused';
+    updateTtsUI();
+  }
+}
+
+function updateTtsUI(statusText) {
+  const playBtn = document.getElementById('ttsPlay');
+  const pauseBtn = document.getElementById('ttsPause');
+  const stopBtn = document.getElementById('ttsStop');
+  const status = document.getElementById('ttsStatus');
+  if (!playBtn) return;
+
+  if (ttsState === 'stopped') {
+    playBtn.textContent = '▶ 읽어주기';
+    playBtn.classList.remove('active');
+    pauseBtn.disabled = true;
+    stopBtn.disabled = true;
+    if (status) status.textContent = '';
+  } else if (ttsState === 'playing') {
+    playBtn.textContent = '▶ 재생 중';
+    playBtn.classList.add('active');
+    pauseBtn.disabled = false;
+    pauseBtn.textContent = '⏸ 일시정지';
+    stopBtn.disabled = false;
+    if (status) status.textContent = statusText || '';
+  } else if (ttsState === 'paused') {
+    playBtn.textContent = '▶ 계속 읽기';
+    playBtn.classList.remove('active');
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = '⏸ 일시정지';
+    stopBtn.disabled = false;
+    if (status) status.textContent = '일시정지됨';
+  }
+}
+
+function isCJK(ch) {
+  return /[一-鿿㐀-䶿]/.test(ch);
+}
+
+function rubyText(text) {
+  if (!text) return '';
+  return text.split('').map(ch => {
+    if (isCJK(ch)) {
+      const info = HANJA_DICT[ch];
+      const rt = info ? info.r : '';
+      return `<ruby>${ch}<rt>${rt}</rt></ruby>`;
+    }
+    if (ch === '\n') return '<br>';
+    return ch;
+  }).join('');
+}
+
+function sectionLabel(d) {
+  if (d.num === 0) return '全文';
+  return '제' + d.num + '단';
+}
+
+function showHanjaModal(id, title) {
+  const d = DATA.find(x => x.id === id);
+  if (!d) return;
+  const lines = d.text.split('\n');
+  let html = '';
+  lines.forEach((line, i) => {
+    html += '<div class="anno-grid">';
+    for (const ch of line) {
+      if (isCJK(ch)) {
+        const info = HANJA_DICT[ch];
+        if (info) {
+          html += `<div class="anno-card"><span class="ac-hanja">${ch}</span><span class="ac-mean">${info.m}</span><span class="ac-read">${info.r}</span></div>`;
+        } else {
+          html += `<div class="anno-card"><span class="ac-hanja">${ch}</span><span class="ac-mean"> </span><span class="ac-read"> </span></div>`;
+        }
+      } else if (/[，。？！、；：「」：]/.test(ch)) {
+        html += `<span class="anno-punct">${ch}</span>`;
+      }
+    }
+    html += '</div>';
+    if (i < lines.length - 1) html += '<div class="anno-break"></div>';
+  });
+  document.getElementById('hanjaModalTitle').textContent = title;
+  document.getElementById('hanjaGrid').innerHTML = html;
+  document.getElementById('hanjaOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeHanjaModal(e) {
+  if (!e || e.target === document.getElementById('hanjaOverlay') || e.target === e.currentTarget) {
+    document.getElementById('hanjaOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeHanjaModal();
+});
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = DATA.map(d => {
+    const isFulltext = d.num === 0;
+    return `
+    <div class="sidebar-item ${isFulltext ? 'fulltext' : ''} ${d.id === currentId ? 'active' : ''}" onclick="selectById('${d.id}')">
+      <span class="sidebar-num">${isFulltext ? '全' : d.num}</span>
+      <span class="sidebar-title">${d.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderSelect() {
+  const sel = document.getElementById('chapterSelect');
+  sel.innerHTML = DATA.map(d =>
+    `<option value="${d.id}" ${d.id === currentId ? 'selected' : ''}>${sectionLabel(d)} ${d.labelKo}</option>`
+  ).join('');
+}
+
+function selectById(id) {
+  ttsStop();
+  searchMode = false;
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
+  currentId = id;
+  renderSidebar();
+  renderSelect();
+  renderChapter();
+  window.scrollTo(0, 0);
+}
+
+function renderChapter() {
+  const d = DATA.find(x => x.id === currentId);
+  if (!d) return;
+  const idx = DATA.indexOf(d);
+  const prev = DATA[idx - 1];
+  const next = DATA[idx + 1];
+
+  const isMantra = d.num === 8;
+  const isFulltext = d.num === 0;
+
+  const originalSection = `
+    <div class="section-label">원문 原文${!isFulltext ? ' <span style="font-size:9px;color:var(--muted);font-weight:300;letter-spacing:0">· 클릭하면 한자 풀이</span>' : ''}</div>
+    <div class="original-text ${!isFulltext ? 'clickable' : ''}" ${!isFulltext ? `onclick="showHanjaModal('${d.id}', '${sectionLabel(d)} ${d.label} ${d.labelKo}')"` : ''}>${rubyText(d.text)}</div>
+  `;
+
+  const phoneticSection = isMantra ? `
+    <div class="phonetic-bar">
+      <span class="phonetic-label">한국어 독음</span>
+      ${d.phonetic}
+    </div>
+  ` : '';
+
+  const meaningSection = `
+    <div class="section-label">${isMantra ? '뜻풀이' : '번역'}</div>
+    <div class="meaning-box">${(d.meaning || '').replace(/\n/g, '<br>')}</div>
+  `;
+
+  const commentarySection = d.commentary ? `
+    <div class="commentary-wrap open" id="commentary-${d.id}">
+      <button class="commentary-toggle" onclick="toggleCommentary('${d.id}')">
+        <span class="ct-label">📖 해설</span>
+        <span class="ct-arrow">▼</span>
+      </button>
+      <div class="commentary-body">
+        <div class="commentary-content">${d.commentary.trim()}</div>
+      </div>
+    </div>` : '';
+
+  const prevLabel = prev ? (prev.num === 0 ? '全文' : '제' + prev.num + '단') : '';
+  const nextLabel = next ? (next.num === 0 ? '全文' : '제' + next.num + '단') : '';
+
+  document.getElementById('main').innerHTML = `
+    <div class="chapter-header">
+      <div class="chapter-num">${sectionLabel(d)}</div>
+      <div class="chapter-title">${d.label}</div>
+      <div class="chapter-ko">${d.labelKo}</div>
+    </div>
+
+    <div class="tts-bar">
+      <button class="tts-btn" id="ttsPlay" onclick="ttsPlay()">▶ 읽어주기</button>
+      <button class="tts-btn" id="ttsPause" onclick="ttsPause()" disabled>⏸ 일시정지</button>
+      <button class="tts-btn" id="ttsStop" onclick="ttsStop()" disabled>⏹ 정지</button>
+      <span class="tts-status" id="ttsStatus"></span>
+    </div>
+
+    ${originalSection}
+    ${phoneticSection}
+    ${meaningSection}
+    ${commentarySection}
+
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="selectById('${prev ? prev.id : ''}')" ${!prev ? 'disabled' : ''}>
+        ← ${prevLabel}
+      </button>
+      <button class="nav-btn" onclick="selectById('${next ? next.id : ''}')" ${!next ? 'disabled' : ''}>
+        ${nextLabel} →
+      </button>
+    </div>
+  `;
+}
+
+function toggleCommentary(id) {
+  const wrap = document.getElementById('commentary-' + id);
+  if (wrap) wrap.classList.toggle('open');
+}
+
+function hl(text, q) {
+  if (!q || !text) return text || '';
+  const terms = q.trim().split(/\s+/).filter(Boolean);
+  return terms.reduce((s, t) => {
+    const re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'g');
+    return s.replace(re, '<mark>$1</mark>');
+  }, text);
+}
+
+function renderSearch(q) {
+  const terms = q.trim().split(/\s+/).filter(Boolean);
+  const items = DATA.filter(d =>
+    terms.every(t =>
+      d.text.includes(t) || d.label.includes(t) ||
+      (d.labelKo && d.labelKo.includes(t)) ||
+      (d.meaning && d.meaning.includes(t))
+    )
+  );
+
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = items.map(d => `
+    <div class="sidebar-search-item" onclick="selectById('${d.id}')">${sectionLabel(d)} ${d.labelKo}</div>
+  `).join('') || '<div style="padding:1rem;font-size:12px;color:var(--muted);">결과 없음</div>';
+
+  if (!items.length) {
+    document.getElementById('main').innerHTML = `<div class="empty"><span class="em">般若心經</span>검색 결과가 없어요.</div>`;
+    return;
+  }
+
+  document.getElementById('main').innerHTML = items.map(d => {
+    const preview = d.text.length > 80 ? d.text.substring(0, 80) + '…' : d.text;
+    return `<div class="search-result-card" onclick="selectById('${d.id}')">
+      <div class="src-top">
+        <span class="src-tag">${sectionLabel(d)}</span>
+        <span class="src-title">${hl(d.label, q)}</span>
+        <span class="src-ko">${hl(d.labelKo, q)}</span>
+      </div>
+      <div class="src-preview">${hl(preview, q)}</div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  const q = e.target.value.trim();
+  if (!q) {
+    searchMode = false;
+    renderSidebar();
+    renderChapter();
+  } else {
+    searchMode = true;
+    searchQuery = q;
+    renderSearch(q);
+  }
+});
+
+currentId = DATA[0].id;
+renderSidebar();
+renderSelect();
+renderChapter();
+</script>
+</body>
+</html>

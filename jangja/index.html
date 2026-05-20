@@ -335,21 +335,21 @@
 
   .no-results { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
 
-  /* ===== TTS 미니 ===== */
-  .tts-mini {
-    display:flex; align-items:center; gap:6px;
-    margin-bottom:1.2rem; padding:8px 12px;
-    background:var(--bg); border:1px solid var(--border); border-radius:4px;
+  /* ===== TTS 편 전체 ===== */
+  .tts-chapter-bar {
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:1.5rem; padding:10px 14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
   }
-  .tts-mini-btn {
+  .tts-ch-btn {
     border:1px solid var(--border); border-radius:4px; background:transparent;
-    cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:12px;
-    color:var(--muted); padding:4px 10px; transition:all 0.2s;
+    cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-size:13px;
+    color:var(--muted); padding:5px 12px; transition:all 0.2s;
   }
-  .tts-mini-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .tts-mini-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .tts-mini-btn:disabled { opacity:0.3; cursor:default; }
-  .tts-mini-status { font-size:11px; color:var(--muted); }
+  .tts-ch-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .tts-ch-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tts-ch-btn:disabled { opacity:0.3; cursor:default; }
+  .tts-ch-status { font-size:12px; color:var(--muted); margin-left:4px; }
 
   /* 반응형 */
   @media (max-width: 700px) {
@@ -1064,6 +1064,7 @@ function selectChapterById(id) {
   document.getElementById('main').classList.remove('search-mode');
   document.getElementById('searchHint').textContent = '';
 
+  ttsChapterStop();
   renderSidebar();
   renderChapter(ch);
 }
@@ -1100,12 +1101,6 @@ function renderChapter(ch) {
           <span class="story-arrow">▼</span>
         </div>
         <div class="story-body">
-          <div class="tts-mini">
-            <button class="tts-mini-btn" id="ttsPlay-${s.id}" onclick="ttsPlayCard('${s.id}')">▶ 읽어주기</button>
-            <button class="tts-mini-btn" id="ttsPause-${s.id}" onclick="ttsPauseCard()" disabled>⏸</button>
-            <button class="tts-mini-btn" id="ttsStop-${s.id}" onclick="ttsStopAll()" disabled>⏹</button>
-            <span class="tts-mini-status" id="ttsStatus-${s.id}"></span>
-          </div>
           <div class="section-label">원문 <span style="font-size:9px;color:var(--muted);font-weight:300;letter-spacing:0">· 클릭하면 한자 풀이</span></div>
           <div class="text-original" onclick="showHanjaModal('${s.id}')">${rubyText(s.text)}</div>
           <hr class="section-divider">
@@ -1144,6 +1139,12 @@ function renderChapter(ch) {
         </div>
       </div>` : ''}
     </div>
+    <div class="tts-chapter-bar">
+      <button class="tts-ch-btn" id="ttsChapterPlay" onclick="ttsChapterPlay()">▶ 편 전체 읽기</button>
+      <button class="tts-ch-btn" id="ttsChapterPause" onclick="ttsChapterPause()" disabled>⏸ 일시정지</button>
+      <button class="tts-ch-btn" id="ttsChapterStop" onclick="ttsChapterStop()" disabled>⏹ 정지</button>
+      <span class="tts-ch-status" id="ttsChapterStatus"></span>
+    </div>
     ${storiesHtml}
     <div class="nav-btns">
       <button class="nav-btn" onclick="selectChapterById('${prev ? prev.id : ''}')" ${!prev ? 'disabled' : ''}>
@@ -1163,88 +1164,129 @@ function toggleIntro(chapterId) {
 function toggleStory(id) {
   const card = document.getElementById(id);
   if (!card) return;
-  if (card.classList.contains('open') && ttsCurrentId === id) ttsStopAll();
   card.classList.toggle('open');
 }
 
-/* ===== TTS ===== */
-let ttsCurrentId = null;
-let ttsMiniState = 'stopped';
+/* ===== TTS 편 전체 ===== */
+let ttsChapterState = 'stopped';
+let ttsChapterStories = [];
+let ttsChapterIdx = 0;
+let ttsChapterPhase = 'literal';
+let ttsChapterPrevId = null;
 
-function ttsPlayCard(id) {
-  let s = null;
-  for (const ch of JANGJA) {
-    s = ch.stories && ch.stories.find(x => x.id === id);
-    if (s) break;
-  }
-  if (!s) return;
-  if (ttsMiniState === 'paused' && ttsCurrentId === id) {
+function ttsChapterPlay() {
+  if (ttsChapterState === 'paused') {
     window.speechSynthesis.resume();
-    ttsMiniState = 'playing';
-    updateTtsMiniUI(id);
+    ttsChapterState = 'playing';
+    updateTtsChapterUI();
     return;
   }
-  const prevId = ttsCurrentId;
+  if (ttsChapterState === 'playing') return;
+  const all = getAllChapters();
+  const ch = all.find(c => c.id === currentChapterId);
+  if (!ch || !ch.stories || ch.stories.length === 0) return;
+  ttsChapterStories = ch.stories;
+  ttsChapterIdx = 0;
+  ttsChapterPhase = 'literal';
+  ttsChapterPrevId = null;
+  ttsChapterState = 'playing';
   window.speechSynthesis.cancel();
-  if (prevId) updateTtsMiniUI(prevId);
-  ttsCurrentId = id;
-  const utt1 = new SpeechSynthesisUtterance((s.literal || '').replace(/\n/g, ' '));
-  utt1.lang = 'ko-KR'; utt1.rate = 0.9;
-  utt1.onstart = () => { ttsMiniState = 'playing'; updateTtsMiniUI(id, '직역 읽는 중…'); };
-  if (s.meaning) {
-    const utt2 = new SpeechSynthesisUtterance(s.meaning.replace(/\n/g, ' '));
-    utt2.lang = 'ko-KR'; utt2.rate = 0.9;
-    utt2.onstart = () => { updateTtsMiniUI(id, '해석 읽는 중…'); };
-    utt2.onend = () => { ttsMiniState = 'stopped'; ttsCurrentId = null; updateTtsMiniUI(id); };
-    utt2.onerror = () => { ttsMiniState = 'stopped'; ttsCurrentId = null; updateTtsMiniUI(id); };
-    window.speechSynthesis.speak(utt1);
-    window.speechSynthesis.speak(utt2);
+  ttsReadNext();
+}
+
+function ttsReadNext() {
+  if (ttsChapterState !== 'playing') return;
+  if (ttsChapterIdx >= ttsChapterStories.length) {
+    if (ttsChapterPrevId) {
+      const prev = document.getElementById(ttsChapterPrevId);
+      if (prev) prev.classList.remove('open');
+    }
+    ttsChapterState = 'stopped';
+    ttsChapterPrevId = null;
+    updateTtsChapterUI();
+    return;
+  }
+  const s = ttsChapterStories[ttsChapterIdx];
+  const text = ttsChapterPhase === 'literal' ? (s.literal || '') : (s.meaning || '');
+  if (ttsChapterPhase === 'literal') {
+    if (ttsChapterPrevId && ttsChapterPrevId !== s.id) {
+      const prevCard = document.getElementById(ttsChapterPrevId);
+      if (prevCard) prevCard.classList.remove('open');
+    }
+    const card = document.getElementById(s.id);
+    if (card) {
+      card.classList.add('open');
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    ttsChapterPrevId = s.id;
+    updateTtsChapterUI(`${ttsChapterIdx + 1} / ${ttsChapterStories.length} — 직역 읽는 중…`);
   } else {
-    utt1.onend = () => { ttsMiniState = 'stopped'; ttsCurrentId = null; updateTtsMiniUI(id); };
-    utt1.onerror = () => { ttsMiniState = 'stopped'; ttsCurrentId = null; updateTtsMiniUI(id); };
-    window.speechSynthesis.speak(utt1);
+    updateTtsChapterUI(`${ttsChapterIdx + 1} / ${ttsChapterStories.length} — 해석 읽는 중…`);
   }
-  ttsMiniState = 'playing';
-  updateTtsMiniUI(id, '직역 읽는 중…');
+  if (!text.trim()) {
+    advanceTtsChapter();
+    return;
+  }
+  const utt = new SpeechSynthesisUtterance(text.replace(/\n/g, ' '));
+  utt.lang = 'ko-KR';
+  utt.rate = 0.9;
+  utt.onend = () => { if (ttsChapterState === 'playing') advanceTtsChapter(); };
+  utt.onerror = (e) => {
+    if (e.error === 'interrupted' || e.error === 'canceled') return;
+    if (ttsChapterState === 'playing') advanceTtsChapter();
+  };
+  window.speechSynthesis.speak(utt);
 }
 
-function ttsPauseCard() {
-  if (ttsMiniState === 'playing') {
+function advanceTtsChapter() {
+  if (ttsChapterPhase === 'literal') {
+    ttsChapterPhase = 'meaning';
+  } else {
+    ttsChapterPhase = 'literal';
+    ttsChapterIdx++;
+  }
+  ttsReadNext();
+}
+
+function ttsChapterPause() {
+  if (ttsChapterState === 'playing') {
     window.speechSynthesis.pause();
-    ttsMiniState = 'paused';
-    if (ttsCurrentId) updateTtsMiniUI(ttsCurrentId);
+    ttsChapterState = 'paused';
+    updateTtsChapterUI();
   }
 }
 
-function ttsStopAll() {
-  const prevId = ttsCurrentId;
+function ttsChapterStop() {
   window.speechSynthesis.cancel();
-  ttsMiniState = 'stopped';
-  ttsCurrentId = null;
-  if (prevId) updateTtsMiniUI(prevId);
+  if (ttsChapterPrevId) {
+    const prev = document.getElementById(ttsChapterPrevId);
+    if (prev) prev.classList.remove('open');
+    ttsChapterPrevId = null;
+  }
+  ttsChapterState = 'stopped';
+  updateTtsChapterUI();
 }
 
-function updateTtsMiniUI(id, statusText) {
-  const playBtn = document.getElementById('ttsPlay-' + id);
-  const pauseBtn = document.getElementById('ttsPause-' + id);
-  const stopBtn = document.getElementById('ttsStop-' + id);
-  const status = document.getElementById('ttsStatus-' + id);
+function updateTtsChapterUI(statusText) {
+  const playBtn = document.getElementById('ttsChapterPlay');
+  const pauseBtn = document.getElementById('ttsChapterPause');
+  const stopBtn = document.getElementById('ttsChapterStop');
+  const status = document.getElementById('ttsChapterStatus');
   if (!playBtn) return;
-  const isThis = ttsCurrentId === id;
-  if (!isThis || ttsMiniState === 'stopped') {
-    playBtn.textContent = '▶ 읽어주기';
+  if (ttsChapterState === 'stopped') {
+    playBtn.textContent = '▶ 편 전체 읽기';
     playBtn.classList.remove('active');
-    if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.textContent = '⏸'; }
+    if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.textContent = '⏸ 일시정지'; }
     if (stopBtn) stopBtn.disabled = true;
     if (status) status.textContent = '';
-  } else if (ttsMiniState === 'playing') {
+  } else if (ttsChapterState === 'playing') {
     playBtn.textContent = '▶ 재생 중';
     playBtn.classList.add('active');
     if (pauseBtn) { pauseBtn.disabled = false; }
     if (stopBtn) stopBtn.disabled = false;
     if (status) status.textContent = statusText || '';
-  } else if (ttsMiniState === 'paused') {
-    playBtn.textContent = '▶ 계속';
+  } else if (ttsChapterState === 'paused') {
+    playBtn.textContent = '▶ 계속 읽기';
     playBtn.classList.remove('active');
     if (pauseBtn) pauseBtn.disabled = true;
     if (stopBtn) stopBtn.disabled = false;
